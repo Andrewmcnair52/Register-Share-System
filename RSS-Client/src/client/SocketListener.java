@@ -23,24 +23,18 @@ public class SocketListener extends Thread {
 		localPort = inLocalPort;
 		destPort = inDestPort;
 		try {
-			socket = new DatagramSocket();
 			if(inServerIP.equals("localhost")) serverIP = InetAddress.getLocalHost();
 			else serverIP = InetAddress.getByName(inServerIP);
-		} catch (SocketException e) { e.printStackTrace(); }
-		catch (UnknownHostException e) { e.printStackTrace(); }
+		} catch (IOException e) { e.printStackTrace(); System.out.println("error while resolving InerAddress");}
 	}
 	
 	public void run() {
-    	
-		try { socket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
-		catch (SocketException e) { 
-			e.printStackTrace(); 
-			System.out.println("socketException while creating DatagramSocket");
-			return;
-		} 
+		
+		try { socket = new DatagramSocket(localPort); }
+		catch (SocketException e) { e.printStackTrace(); System.out.println("SocketException while declaring datagram socket"); }
     	
     	while(true) {	//loop for receiving/parsing/handling incoming data
-	     	   
+    		
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     			
     		System.out.println("\nwaiting to recieve data");

@@ -26,22 +26,23 @@ public class UDPServer extends Thread {											//internal server class
     public UDPServer(int inLocalPort, int inDestPort) {
     	inputBuffer = new byte[BUFF_SIZE];
     	localPort = inLocalPort;
-    	destPort = inDestPort;
+    	destPort = inDestPort; 
+    	
     }
     
     public void run() {
     	
     	System.out.println("starting UDP server");
     	
-		try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
+    	try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
 		catch (SocketException e) { 
 			e.printStackTrace(); 
 			System.out.println("socketException while creating DatagramSocket");
 			return;
-		} 
-    	
+		}
+		
     	while(true) {	//loop for receiving/parsing/handling incoming data
-	     	   
+	     	
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     			
     		System.out.println("\nwaiting to recieve data");
