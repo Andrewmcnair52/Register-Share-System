@@ -2,6 +2,8 @@ package client;
 
 public class app {
 	
+	//test push
+	
 	public static int localPort = 6055;				//client port number
 	public static int destPort = 6066;				//server port number
 	public static String serverIP = "localhost";	//server ip address
