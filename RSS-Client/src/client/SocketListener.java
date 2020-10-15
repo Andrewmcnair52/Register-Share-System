@@ -22,6 +22,8 @@ public class SocketListener extends Thread {
 		inputBuffer =new byte[BUFF_SIZE];
 		localPort = inLocalPort;
 		destPort = inDestPort;
+		try { socket = new DatagramSocket(localPort); }
+		catch (SocketException e) { e.printStackTrace(); System.out.println("SocketException while declaring datagram socket"); }
 		try {
 			if(inServerIP.equals("localhost")) serverIP = InetAddress.getLocalHost();
 			else serverIP = InetAddress.getByName(inServerIP);
@@ -29,9 +31,6 @@ public class SocketListener extends Thread {
 	}
 	
 	public void run() {
-		
-		try { socket = new DatagramSocket(localPort); }
-		catch (SocketException e) { e.printStackTrace(); System.out.println("SocketException while declaring datagram socket"); }
     	
     	while(true) {	//loop for receiving/parsing/handling incoming data
     		
@@ -48,7 +47,7 @@ public class SocketListener extends Thread {
     	    switch(inputBuffer[0]) {
 	    	
     	    case 0:	// a test case, print message to console
-    	    	app.display("data recieved, from server: " + data(inputBuffer));	//convert data to string, then send to app for displaying
+    	    	app.display("data recieved, from server: " + parseString(inputBuffer, 1));	//convert data to string, then send to app for displaying
     	    	break;
     	    	
     	    default:
@@ -79,17 +78,13 @@ public class SocketListener extends Thread {
 	}
 	
 	 
-    String data(byte[] a) { 	//function to convert byte array to string
+	String parseString(byte[] data, int start) { 	//function to convert byte array to string
     	
-        if (a == null) return null; 
+        if (data == null) return null; 
         String out = new String(); 
-        for(int i=0; a[i]!=0; i++)
-        	out += ((char) a[i]); 
+        for(int i=start; data[i]!=0; i++)
+        	out += ((char) data[i]); 
         return out; 
-    }
-    
-    protected void finalize() {
-		socket.close();
     }
 	
 	
