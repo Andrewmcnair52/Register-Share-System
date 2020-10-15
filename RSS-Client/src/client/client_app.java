@@ -1,8 +1,6 @@
 package client;
 
-public class app {
-	
-	//test push
+public class client_app {
 	
 	public static int localPort = 6055;				//client port number
 	public static int destPort = 6066;				//server port number

@@ -1,6 +1,6 @@
 package Server;
 
-public class app {
+public class server_app {
 
 	public static int localPort = 6066;		//server port
 	public static int destPort = 6055;		//client port

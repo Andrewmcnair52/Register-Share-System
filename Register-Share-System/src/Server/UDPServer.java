@@ -10,6 +10,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.Vector;
 
 
@@ -22,9 +23,14 @@ public class UDPServer extends Thread {											//internal server class
 	DatagramSocket serverSocket;				//server listens on this socket
 	byte[] inputBuffer, outputBuffer;			//network io buffers
 	DatagramPacket dpReceive, dpSend;	;		//datagram packets
-    
+	
+	ArrayList<String> registeredUsers;
+	
+	
     public UDPServer(int inLocalPort, int inDestPort) {
     	inputBuffer = new byte[BUFF_SIZE];
+    	registeredUsers = new ArrayList<String>();
+    	
     	localPort = inLocalPort;
     	destPort = inDestPort;
     }
@@ -55,12 +61,15 @@ public class UDPServer extends Thread {											//internal server class
     	    switch(inputBuffer[0]) {
     	    	
     	    case 0:	// a test case, print message to console, and respond with 'message received'
-    	    	app.display("data recieved from client: "+parseString(inputBuffer,1));	//convert data to string, then send to main for displaying
+    	    	server_app.display("data recieved from client: "+parseString(inputBuffer,1));	//convert data to string, then send to main for displaying
     	    	sendString("message recieved", 0, dpReceive.getAddress());					//send response
     	    	break;
     	    	
+    	    case 1: //registration request
+    	    	
+    	    	
     	    default:
-    	    	app.display("invalid operation recieved, initial byte out of range");
+    	    	server_app.display("invalid operation recieved, initial byte out of range");
     	    }
     	    
     	    
@@ -81,15 +90,19 @@ public class UDPServer extends Thread {											//internal server class
         return out; 
     } 
     
-public void sendString(String message, int op, InetAddress ip) {
+    public void sendString(String message, int op, InetAddress ip) {
 		
 		outputBuffer = message.getBytes(); 	//convert string to byte array
     	dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, ip, destPort); 	//create datagram packet 
 
     	try { serverSocket.send(dpSend); }	//send data
-    	catch(IOException e) { e.printStackTrace(); app.display("message could not be sent"); }
+    	catch(IOException e) { e.printStackTrace(); server_app.display("message could not be sent"); }
     	
 	}
+    
+    private int registerUser() {
+    	
+    }
 	   
 	      
 }

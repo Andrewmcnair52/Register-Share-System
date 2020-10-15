@@ -22,22 +22,17 @@ public class SocketListener extends Thread {
 		inputBuffer =new byte[BUFF_SIZE];
 		localPort = inLocalPort;
 		destPort = inDestPort;
+		try { socket = new DatagramSocket(localPort); }
+		catch (SocketException e) { e.printStackTrace(); System.out.println("SocketException while declaring datagram socket"); }
 		try {
-			socket = new DatagramSocket();
 			if(inServerIP.equals("localhost")) serverIP = InetAddress.getLocalHost();
 			else serverIP = InetAddress.getByName(inServerIP);
-		} catch (SocketException e) { e.printStackTrace(); }
-		catch (UnknownHostException e) { e.printStackTrace(); }
+		} catch (IOException e) { e.printStackTrace(); System.out.println("error while resolving InerAddress");}
 	}
 	
 	public void run() {
-    	
-		try { socket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
-		catch (SocketException e) { 
-			e.printStackTrace(); 
-			System.out.println("socketException while creating DatagramSocket");
-			return;
-		} 
+		
+		formatRegisterReq();
     	
     	while(true) {	//loop for receiving/parsing/handling incoming data
 	     	   
@@ -54,11 +49,11 @@ public class SocketListener extends Thread {
     	    switch(inputBuffer[0]) {
 	    	
     	    case 0:	// a test case, print message to console
-    	    	app.display("data recieved, from server: " + data(inputBuffer));	//convert data to string, then send to app for displaying
+    	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));	//convert data to string, then send to app for displaying
     	    	break;
     	    	
     	    default:
-    	    	app.display("invalid operation recieved, initial byte out of range");
+    	    	client_app.display("invalid operation recieved, initial byte out of range");
     	    }
     	    
     	    
@@ -80,22 +75,36 @@ public class SocketListener extends Thread {
 		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, serverIP, destPort); 	//create datagram packet 
 
     	try { socket.send(dpSend); }	//send data
-    	catch(IOException e) { e.printStackTrace(); app.display("message could not be sent"); }
+    	catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
     	
 	}
 	
+	
+	public void formatRegisterReq() {
+		int regId = 0; // we will have to give all requests codes
+		int rqNum = 1; //whats this?
+		String name = "frank";
+		String ip = "192.168.1.1"; // dummy address, will all be local host no?
+		int socket = localPort; //socket = port?
+		
+		String registerReq = regId + rqNum + name + ip + socket;
+		
+		
+		sendString(registerReq, 0);
+		
+		
+		
+		
+	}
+	
 	 
-    String data(byte[] a) { 	//function to convert byte array to string
+	String parseString(byte[] data, int start) { 	//function to convert byte array to string
     	
-        if (a == null) return null; 
+        if (data == null) return null; 
         String out = new String(); 
-        for(int i=0; a[i]!=0; i++)
-        	out += ((char) a[i]); 
+        for(int i=start; data[i]!=0; i++)
+        	out += ((char) data[i]); 
         return out; 
-    }
-    
-    protected void finalize() {
-		socket.close();
     }
 	
 	
