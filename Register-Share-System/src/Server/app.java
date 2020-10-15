@@ -13,6 +13,8 @@ public class app {
 		server.start();
 		
 		//input parser + help + rest of console interface goes here
+		
+		//test
 
 	}
     
