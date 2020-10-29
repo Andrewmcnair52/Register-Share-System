@@ -102,6 +102,14 @@ public class UDPServer extends Thread {											//internal server class
     
     private int registerUser() {
     	
+    	//if i am not the active server, do nothing 
+    	//check if user is already registerd
+    	//check if user name is available
+    	// if its all good, register them
+    	// then send the other server a message about what happened
+    	// then send the user back a message about what happened
+    	
+    	return 0;
     }
 	   
 	      
