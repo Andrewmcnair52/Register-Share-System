@@ -32,22 +32,23 @@ public class UDPServer extends Thread {											//internal server class
     	registeredUsers = new ArrayList<String>();
     	
     	localPort = inLocalPort;
-    	destPort = inDestPort;
+    	destPort = inDestPort; 
+    	try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
+		catch (SocketException e) { 
+			e.printStackTrace(); 
+			System.out.println("socketException while creating DatagramSocket");
+		}
+    	
     }
     
     public void run() {
     	
     	System.out.println("starting UDP server");
     	
-		try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
-		catch (SocketException e) { 
-			e.printStackTrace(); 
-			System.out.println("socketException while creating DatagramSocket");
-			return;
-		} 
     	
+		
     	while(true) {	//loop for receiving/parsing/handling incoming data
-	     	   
+	     	
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     			
     		System.out.println("\nwaiting to recieve data");
@@ -92,7 +93,13 @@ public class UDPServer extends Thread {											//internal server class
     
     public void sendString(String message, int op, InetAddress ip) {
 		
-		outputBuffer = message.getBytes(); 	//convert string to byte array
+		//convert string to byte array
+		byte[] tmpBuff = message.getBytes();		//get message as a byte array
+		outputBuffer = new byte[tmpBuff.length+1];
+		outputBuffer[0] = (byte) op;				//append a zero to beginning for server side command handler
+		for(int i=0; i<tmpBuff.length; i++)			//copy message byte array to output buffer
+		outputBuffer[i+1] = tmpBuff[i];
+		
     	dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, ip, destPort); 	//create datagram packet 
 
     	try { serverSocket.send(dpSend); }	//send data

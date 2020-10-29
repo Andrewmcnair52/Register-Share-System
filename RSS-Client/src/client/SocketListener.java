@@ -31,11 +31,13 @@ public class SocketListener extends Thread {
 	}
 	
 	public void run() {
+
 		
 		formatRegisterReq();
+
     	
     	while(true) {	//loop for receiving/parsing/handling incoming data
-	     	   
+    		
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     			
     		System.out.println("\nwaiting to recieve data");
@@ -49,7 +51,11 @@ public class SocketListener extends Thread {
     	    switch(inputBuffer[0]) {
 	    	
     	    case 0:	// a test case, print message to console
+
     	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));	//convert data to string, then send to app for displaying
+
+    	    	app.display("data recieved, from server: " + parseString(inputBuffer, 1));	//convert data to string, then send to app for displaying
+
     	    	break;
     	    	
     	    default:
