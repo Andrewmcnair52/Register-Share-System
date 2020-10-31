@@ -31,6 +31,10 @@ public class SocketListener extends Thread {
 	}
 	
 	public void run() {
+
+		
+		formatRegisterReq();
+
     	
     	while(true) {	//loop for receiving/parsing/handling incoming data
     		
@@ -47,11 +51,15 @@ public class SocketListener extends Thread {
     	    switch(inputBuffer[0]) {
 	    	
     	    case 0:	// a test case, print message to console
+
+    	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));	//convert data to string, then send to app for displaying
+
     	    	app.display("data recieved, from server: " + parseString(inputBuffer, 1));	//convert data to string, then send to app for displaying
+
     	    	break;
     	    	
     	    default:
-    	    	app.display("invalid operation recieved, initial byte out of range");
+    	    	client_app.display("invalid operation recieved, initial byte out of range");
     	    }
     	    
     	    
@@ -73,8 +81,26 @@ public class SocketListener extends Thread {
 		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, serverIP, destPort); 	//create datagram packet 
 
     	try { socket.send(dpSend); }	//send data
-    	catch(IOException e) { e.printStackTrace(); app.display("message could not be sent"); }
+    	catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
     	
+	}
+	
+	
+	public void formatRegisterReq() {
+		int regId = 0; // we will have to give all requests codes
+		int rqNum = 1; //whats this?
+		String name = "frank";
+		String ip = "192.168.1.1"; // dummy address, will all be local host no?
+		int socket = localPort; //socket = port?
+		
+		String registerReq = regId + rqNum + name + ip + socket;
+		
+		
+		sendString(registerReq, 0);
+		
+		
+		
+		
 	}
 	
 	 
