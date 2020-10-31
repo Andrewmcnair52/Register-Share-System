@@ -54,7 +54,7 @@ public class SocketListener extends Thread {
 
     	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));	//convert data to string, then send to app for displaying
 
-    	    	app.display("data recieved, from server: " + parseString(inputBuffer, 1));	//convert data to string, then send to app for displaying
+    	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));	//convert data to string, then send to app for displaying
 
     	    	break;
     	    	
