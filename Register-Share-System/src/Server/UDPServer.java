@@ -1,6 +1,7 @@
 package Server;
 
 import java.io.DataInputStream;
+import java.util.Random;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -12,6 +13,8 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.Vector;
 
 
@@ -27,7 +30,11 @@ public class UDPServer extends Thread {											//internal server class
 	
 	DatagramSocket serverSocket;				//server listens on this socket
 	byte[] inputBuffer, outputBuffer;			//network io buffers
-	DatagramPacket dpReceive, dpSend;	;		//datagram packets
+	DatagramPacket dpReceive, dpSend;			//datagram packets
+	
+	Timer serverSwitchTimer = new Timer();
+	TimerExec serverSwitchExec = new TimerExec();
+	Random rand = new Random();
 	
 	ArrayList<String> registeredUsers;
 	
@@ -67,7 +74,7 @@ public class UDPServer extends Thread {											//internal server class
     	     * 	100: server sync
     	     * 	101: server sync confirmation
     	     * 	101: server switch
-    	     * 
+    	     * 	102: server switch
     	     */
     	    
     	    
@@ -92,30 +99,31 @@ public class UDPServer extends Thread {											//internal server class
     	    	otherServerIP = dpReceive.getAddress();
     	    	otherServerPort = dpReceive.getPort();
     	    	
-    	    	//respond to sync other server
-    	    	sendServer("s",101);
-    	    	
-    	    	//set servers as sync'd
-    	    	dualServerSync = true;
-    	    	isServing = true;		//server 1 starts
-    	    	System.out.println("this server is serving");
-    	    	
+    	    	if(Objects.equals(parseString(inputBuffer,1),"s1")) {	//we are server 1
+        	    	dualServerSync = true;	//set server as sync'd
+        	    	isServing = true;		//server 1 serves first
+        	    	System.out.println("this server is serving");
+        	    	sendServer("s2",100);	//respond to sync other server
+    	    	} else {	//we are server 2
+    	    		dualServerSync = true;	//set server as sync'd but do not set isServing
+    	    		sendServer("s",101);	//respond with sync confirmation to start server1's timer
+    	    		System.out.println("this server is not serving");
+    	    		serverSwitchTimer = new Timer();		//initialize server 2's timer
+        	    	serverSwitchExec = new TimerExec();		//initialize server2's timerTask
+    	    	}
     	    	break;
     	    	
     	    case 101: //server sync confirmation
     	    	
-    	    	//save info for other server
-    	    	otherServerIP = dpReceive.getAddress();
-    	    	otherServerPort = dpReceive.getPort();
-    	    	
-    	    	//set servers as sync'd, leave isServing false
-    	    	dualServerSync = true;
-    	    	System.out.println("this server is not serving");
-    	    	
+    	    	//if we're here, then both servers are now sync'd and this is server 1
+    	    	//start serverSwitchTimer
+    	    	startTimer();
     	    	break;
     	    
     	    case 102: //server switch
-    	    	
+    	    	//other server has notified us that of a server switch
+    	    	isServing = true;	//start serving
+    	    	startTimer();		//start timer for next server switch
     	    	break;
     	    }
     	    
@@ -174,7 +182,43 @@ public class UDPServer extends Thread {											//internal server class
     	
 	}
     
-//==================================================
+ //==================================================
+ // Timer Stuff
+ //==================================================
+    
+   class TimerExec extends TimerTask {
+	   public void run() { 
+		   System.out.println("timer triggered, switching servers");
+		   
+		   //notify registered clients, this can only be done after there are registered clients(FRANK)
+		   
+		   sendServer("",102);	//notify other server first
+		   isServing = false;	//stop serving
+		   
+	   }
+   }
+   
+   public void startTimer() {
+	   
+	   //reset timer
+	   serverSwitchTimer.cancel();
+	   serverSwitchTimer.purge();
+	   serverSwitchTimer = new Timer();
+	   serverSwitchExec = new TimerExec();
+
+	   //project description says to "pick a random value say 5m"
+	   int val = 240000 + rand.nextInt(360000); //pick a value between 240,000 and 360,000 (4m-6m)
+	   //int val = 10000 + rand.nextInt(2000);	//10-12 seconds, left here for debuggin purposes
+	   System.out.println("server switch in: " + val);
+   	
+	   //schedule(TimerTask task, Date time)
+	   // task: task to run
+	   // time: time to wait before running task in milliseconds
+	   serverSwitchTimer.schedule(serverSwitchExec, val);
+   	
+   }
+    
+ //==================================================
     
     private int registerUser() {
     	

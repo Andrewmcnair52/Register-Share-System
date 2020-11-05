@@ -31,14 +31,14 @@ public class server_app {
 			
 			} else if(serverNum==2) {
 				
-				//start server 2
-				server = new UDPServer(localPort2);
-				server.start();
-				
 				//solicit ip for server 1
 				System.out.println("please enter the second servers IP address, or 'localhost' for local machine");
 				System.out.print("> ");
 				String secondServerIPstr = cin.readLine();
+				
+				//start server 2
+				server = new UDPServer(localPort2);
+				server.start();
 				
 				InetAddress secondServerIP;
 				if(secondServerIPstr.equals("localhost")) secondServerIP = InetAddress.getLocalHost();
@@ -46,7 +46,8 @@ public class server_app {
 				
 				//send sync message to server 1
 				//using sendString() over sendServer() since second server info is not available yet
-				server.sendString("s",100, secondServerIP, localPort1);
+				//send server s1 to tell it that it should be server 1, it will then respond triggering this servers sync
+				server.sendString("s1",100, secondServerIP, localPort1);
 				
 			}
 			
@@ -59,15 +60,8 @@ public class server_app {
 			System.out.println("\ninvalid value\n"+e.getMessage()+"\nvalue should be an integer\nexiting ...");
 			
 		}
-		
-		//start server
-		//server = new UDPServer(localPort1, localPort2, destPort);
-		//server.start();
-		
-		//input parser + help + rest of console interface goes here
 
 	}
-    
 	
 	public static void display(String in) {
 		//server dont need no gui, but this function can be used for display formating
