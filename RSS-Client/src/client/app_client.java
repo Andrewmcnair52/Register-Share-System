@@ -1,8 +1,9 @@
 package client;
 
+import java.util.Enumeration;
 import java.util.Vector;
 
-public class app {
+public class app_client {
 	
 	public static int localPort = 6055;				//client port number
 	public static int destPort = 6066;				//server port number
@@ -11,7 +12,7 @@ public class app {
 	public static SocketListener socket;
 
 	public static void main(String[] args) {
-
+        // commit to Oussama's branch
 		//start socket listener thread
 		socket = new SocketListener(serverIP, localPort, destPort);
 		socket.start();
@@ -28,6 +29,15 @@ public class app {
 		listOfUsers.add(user2);
 		user1.displayUserInformation();
 		user2.displayUserInformation();
+	
+		socket.sendString(user1.getName(), 0);
+		socket.sendString(user1.getIp_address(), 0);
+		socket.sendString(String.valueOf(user1.getSocketNumber()), 0);
+		Enumeration enu = user1.getSubjectOfInterestVector().elements();
+		while(enu.hasMoreElements()) {
+			
+			socket.sendString(enu.nextElement().toString()+" ", 0);
+		}
 		
 	}
 	
