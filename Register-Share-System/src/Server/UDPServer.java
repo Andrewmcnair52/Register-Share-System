@@ -27,6 +27,11 @@ public class UDPServer extends Thread {											//internal server class
     	inputBuffer = new byte[BUFF_SIZE];
     	localPort = inLocalPort;
     	destPort = inDestPort; 
+    	try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
+		catch (SocketException e) { 
+			e.printStackTrace(); 
+			System.out.println("socketException while creating DatagramSocket");
+		}
     	
     }
     
@@ -34,12 +39,7 @@ public class UDPServer extends Thread {											//internal server class
     	
     	System.out.println("starting UDP server");
     	
-    	try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
-		catch (SocketException e) { 
-			e.printStackTrace(); 
-			System.out.println("socketException while creating DatagramSocket");
-			return;
-		}
+    	
 		
     	while(true) {	//loop for receiving/parsing/handling incoming data
 	     	
@@ -56,12 +56,12 @@ public class UDPServer extends Thread {											//internal server class
     	    switch(inputBuffer[0]) {
     	    	
     	    case 0:	// a test case, print message to console, and respond with 'message received'
-    	    	app.display("data recieved from client: "+parseString(inputBuffer,1));	//convert data to string, then send to main for displaying
+    	    	app_server.display("data recieved from client: "+parseString(inputBuffer,1));	//convert data to string, then send to main for displaying
     	    	sendString("message recieved", 0, dpReceive.getAddress());					//send response
     	    	break;
     	    	
     	    default:
-    	    	app.display("invalid operation recieved, initial byte out of range");
+    	    	app_server.display("invalid operation recieved, initial byte out of range");
     	    }
     	    
     	    
@@ -84,11 +84,17 @@ public class UDPServer extends Thread {											//internal server class
     
 public void sendString(String message, int op, InetAddress ip) {
 		
-		outputBuffer = message.getBytes(); 	//convert string to byte array
+		//convert string to byte array
+		byte[] tmpBuff = message.getBytes();		//get message as a byte array
+		outputBuffer = new byte[tmpBuff.length+1];
+		outputBuffer[0] = (byte) op;				//append a zero to beginning for server side command handler
+		for(int i=0; i<tmpBuff.length; i++)			//copy message byte array to output buffer
+		outputBuffer[i+1] = tmpBuff[i];
+		
     	dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, ip, destPort); 	//create datagram packet 
 
     	try { serverSocket.send(dpSend); }	//send data
-    	catch(IOException e) { e.printStackTrace(); app.display("message could not be sent"); }
+    	catch(IOException e) { e.printStackTrace(); app_server.display("message could not be sent"); }
     	
 	}
 	   

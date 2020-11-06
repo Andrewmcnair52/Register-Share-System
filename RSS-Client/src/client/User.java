@@ -2,7 +2,7 @@ package client;
 
 import java.util.Vector;
 
-public class User extends app {
+public class User extends app_client {
 	private String name = "Unknown User";
 	private String ipAddress = "0.0.0.0";
 	private int socketNumber = 0;
@@ -55,11 +55,21 @@ public class User extends app {
 
 	}
 
+	public int subjectsOfInterestSize() {
+		return subjectsOfInterest.size();
+	}
+
 	// This function needed to be clarified later on
 	public void getSubjectOfInterest() {
 		// Output the present vector
 		System.out.println(this.name + " subjects of interest are: " + this.subjectsOfInterest);
 		// return this.subjectsOfInterest;
+	}
+	
+	public Vector<String> getSubjectOfInterestVector() {
+		// Output the present vector
+		System.out.println(this.name + " subjects of interest are: " + this.subjectsOfInterest);
+		return this.subjectsOfInterest;
 	}
 
 	// This function needed to be clarified later on
