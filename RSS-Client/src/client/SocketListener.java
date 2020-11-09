@@ -15,25 +15,26 @@ public class SocketListener extends Thread {
 	private byte[] inputBuffer, outputBuffer;
 	private DatagramPacket dpSend, dpReceive;
 	private DatagramSocket socket;
-	private InetAddress serverIP;
-	private int localPort, destPort;
+	private InetAddress server1IP, server2IP;
+	private int localPort, server1Port, server2Port;
 	
-	public SocketListener(String inServerIP, int inLocalPort, int inDestPort) {
-		inputBuffer =new byte[BUFF_SIZE];
+	public SocketListener(String inServer1IP, String inServer2IP, int inServer1Port, int inServer2Port, int inLocalPort) {
+		inputBuffer = new byte[BUFF_SIZE];
 		localPort = inLocalPort;
-		destPort = inDestPort;
+		server1Port = inServer1Port;
+		server2Port = inServer2Port;
 		try { socket = new DatagramSocket(localPort); }
 		catch (SocketException e) { e.printStackTrace(); System.out.println("SocketException while declaring datagram socket"); }
-    	
 		try {
-			if(inServerIP.equals("localhost")) serverIP = InetAddress.getLocalHost();
-			else serverIP = InetAddress.getByName(inServerIP);
+			if(inServer1IP.equals("localhost")) server1IP = InetAddress.getLocalHost();
+			else server1IP = InetAddress.getByName(inServer1IP);
+			if(inServer2IP.equals("localhost")) server2IP = InetAddress.getLocalHost();
+			else server2IP = InetAddress.getByName(inServer2IP);
 		} catch (IOException e) { e.printStackTrace(); System.out.println("error while resolving InerAddress");}
 	}
 	
 	public void run() {
-		
-		
+    	
     	while(true) {	//loop for receiving/parsing/handling incoming data
     		
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
@@ -49,11 +50,13 @@ public class SocketListener extends Thread {
     	    switch(inputBuffer[0]) {
 	    	
     	    case 0:	// a test case, print message to console
-    	    	app_client.display("data recieved, from server: " + parseString(inputBuffer, 1));	//convert data to string, then send to app for displaying
+
+    	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
+
     	    	break;
     	    	
     	    default:
-    	    	app_client.display("invalid operation recieved, initial byte out of range");
+    	    	client_app.display("invalid operation recieved, initial byte out of range");
     	    }
     	    
     	    
@@ -63,7 +66,7 @@ public class SocketListener extends Thread {
 		
 	}
 	
-	public void sendString(String message, int op) {
+	public void sendString1(String message, int op) {
 		
 		//convert string to byte array
 		byte[] tmpBuff = message.getBytes();		//get message as a byte array
@@ -72,15 +75,49 @@ public class SocketListener extends Thread {
 		for(int i=0; i<tmpBuff.length; i++)			//copy message byte array to output buffer
 			outputBuffer[i+1] = tmpBuff[i]; 
     	
-		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, serverIP, destPort); 	//create datagram packet 
+		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server1IP, server1Port); 	//create datagram packet 
 
     	try { socket.send(dpSend); }	//send data
-    	catch(IOException e) { e.printStackTrace(); app_client.display("message could not be sent"); }
+    	catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
     	
 	}
 	
+	public void sendString2(String message, int op) {
+		
+		//convert string to byte array
+		byte[] tmpBuff = message.getBytes();		//get message as a byte array
+		outputBuffer = new byte[tmpBuff.length+1];
+		outputBuffer[0] = (byte) op;						//append a zero to beginning for server side command handler
+		for(int i=0; i<tmpBuff.length; i++)			//copy message byte array to output buffer
+			outputBuffer[i+1] = tmpBuff[i]; 
+    	
+		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server2IP, server2Port); 	//create datagram packet 
+
+    	try { socket.send(dpSend); }	//send data
+    	catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
+    	
+	}
+	
+	
+	public void formatRegisterReq() {
+		int regId = 0; // we will have to give all requests codes
+		int rqNum = 1; //whats this?
+		String name = "frank";
+		String ip = "192.168.1.1"; // dummy address, will all be local host no?
+		int socket = localPort; //socket = port?
+		
+		String registerReq = regId + rqNum + name + ip + socket;
+		
+		
+		sendString1(registerReq, 0);
+		
+		
+		
+		
+	}
+	
 	 
-    String parseString(byte[] data, int start) { 	//function to convert byte array to string
+	String parseString(byte[] data, int start) { 	//function to convert byte array to string
     	
         if (data == null) return null; 
         String out = new String(); 
@@ -88,8 +125,6 @@ public class SocketListener extends Thread {
         	out += ((char) data[i]); 
         return out; 
     }
-    
-    
 	
 	
 }

@@ -2,28 +2,31 @@ package client;
 
 import java.util.Vector;
 
-public class User extends app_client {
+public class client_User extends client_app {
 	private String name = "Unknown User";
 	private String ipAddress = "0.0.0.0";
 	private int socketNumber = 0;
 	private Vector<String> subjectsOfInterest = new Vector<String>();
+	client_User(){
+	}
 
-	User(String _name, String _ip_address, int _socket_number) {
+	client_User(String _name, String _ip_address, int _socket_number) {
 		setName(_name);
-		setIp_address(_ip_address);
+		setIpAddress(_ip_address);
 		setSocketNumber(_socket_number);
+		
 	}
 
 	public String getIp_address() {
 		return ipAddress;
 	}
 
-	public void setIp_address(String _ip_address) {
+	public void setIpAddress(String _ip_address) {
 		if (this.ipAddress == "0.0.0.0") {
 			this.ipAddress = _ip_address;
 		} else if (this.ipAddress != _ip_address) {
-			System.out.println(
-					this.name + " has changed his/her IP Address from " + this.ipAddress + " to " + _ip_address);
+			System.out.println( this.name + " has changed his/her IP Address from " + this.ipAddress + " to " + _ip_address);
+			this.ipAddress = _ip_address;
 		}
 
 	}
@@ -37,6 +40,7 @@ public class User extends app_client {
 			this.name = _name;
 		} else if (this.name != _name) {
 			System.out.println(this.name + " has changed his/her name to " + _name);
+			this.name = _name;
 		}
 
 	}
@@ -51,6 +55,7 @@ public class User extends app_client {
 		} else if (this.socketNumber != _socket_number) {
 			System.out.println(
 					this.name + " has changed his/her socket number from " + socketNumber + " to " + _socket_number);
+			this.socketNumber = _socket_number;
 		}
 
 	}
@@ -90,9 +95,19 @@ public class User extends app_client {
 	}
 
 	public void displayUserInformation() {
-		System.out.println("\nName: " + this.name);
+		System.out.println("\nDisplaying the user information:");
+		System.out.println("Name: " + this.name);
 		System.out.println("IP Address: " + this.ipAddress);
 		System.out.println("Socket number: " + this.socketNumber);
 		this.getSubjectOfInterest();
+	}
+	public void updateRegistredUser (int request, int _socket_number, String _name, String _ip_address) {
+		// how to deal with request number?
+		setName(_name);
+		setIpAddress(_ip_address);
+		setSocketNumber(_socket_number);
+	}
+	public void updateSubject () {
+		
 	}
 }
