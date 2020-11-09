@@ -73,7 +73,6 @@ public class UDPServer extends Thread {											//internal server class
     	     * 	1: registration request
     	     * 	100: server sync
     	     * 	101: server sync confirmation
-    	     * 	101: server switch
     	     * 	102: server switch
     	     */
     	    

@@ -32,7 +32,7 @@ public class server_app {
 			} else if(serverNum==2) {
 				
 				//solicit ip for server 1
-				System.out.println("please enter the second servers IP address, or 'localhost' for local machine");
+				System.out.println("please enter the first servers IP address, or 'localhost' for local machine");
 				System.out.print("> ");
 				String secondServerIPstr = cin.readLine();
 				

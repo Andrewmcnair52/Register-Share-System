@@ -66,7 +66,7 @@ public class SocketListener extends Thread {
 		
 	}
 	
-	public void sendString1(String message, int op) {
+	public void sendString(String message, int op, int serverNum) {
 		
 		//convert string to byte array
 		byte[] tmpBuff = message.getBytes();		//get message as a byte array
@@ -75,24 +75,10 @@ public class SocketListener extends Thread {
 		for(int i=0; i<tmpBuff.length; i++)			//copy message byte array to output buffer
 			outputBuffer[i+1] = tmpBuff[i]; 
     	
-		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server1IP, server1Port); 	//create datagram packet 
-
-    	try { socket.send(dpSend); }	//send data
-    	catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
-    	
-	}
-	
-	public void sendString2(String message, int op) {
+		if(serverNum==1) dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server1IP, server1Port); 	//create datagram packet 
+		else if(serverNum==2) dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server2IP, server2Port); 	//create datagram packet 
+		else { System.out.println("message could not be sent, invalid server number: " + serverNum); return; }
 		
-		//convert string to byte array
-		byte[] tmpBuff = message.getBytes();		//get message as a byte array
-		outputBuffer = new byte[tmpBuff.length+1];
-		outputBuffer[0] = (byte) op;						//append a zero to beginning for server side command handler
-		for(int i=0; i<tmpBuff.length; i++)			//copy message byte array to output buffer
-			outputBuffer[i+1] = tmpBuff[i]; 
-    	
-		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server2IP, server2Port); 	//create datagram packet 
-
     	try { socket.send(dpSend); }	//send data
     	catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
     	
@@ -109,7 +95,7 @@ public class SocketListener extends Thread {
 		String registerReq = regId + rqNum + name + ip + socket;
 		
 		
-		sendString1(registerReq, 0);
+		sendString(registerReq, 0, 1);
 		
 		
 		
