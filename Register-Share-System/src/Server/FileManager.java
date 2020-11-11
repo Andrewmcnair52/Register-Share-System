@@ -11,8 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 
-import org.json.simple.*;
-
 
 public class FileManager {
 	//needs to have a file, and methods to add to that file

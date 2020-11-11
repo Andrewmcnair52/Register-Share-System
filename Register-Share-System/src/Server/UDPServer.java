@@ -82,9 +82,12 @@ public class UDPServer extends Thread {											//internal server class
     	    
     	    /*	0: test case
     	     * 	1: registration request
+    	     *  2: deregister
     	     * 	100: server sync
     	     * 	101: server sync confirmation
     	     * 	102: server switch
+    	     *  103: registration on other server
+    	     *  104: dereg on other server
     	     */
     	    
     	    //note: we cast the op codes to bytes when we send them, meaning we can only use op codes in the range of [-128, 127]
@@ -99,17 +102,13 @@ public class UDPServer extends Thread {											//internal server class
     	    	break;
     	    	
     	    case 1: //registration request
-    	    	//how will the registration request be handled?
     	    	
+    	    	String regReq = parseString(inputBuffer, 1);
     	    	
-    	    	//1 is reg req
-    	    	//2 is un register
-    	    	//3 is server to server reg
-    	    	//4 is register accepted
-    	    	//5 is reg denied
+    	    	String[] reqSplit = regReq.split("-");
     	    	
-    	    	User newUser = unpackRegisterRequest(inputBuffer);
-    	    	int reqNum = inputBuffer[0];
+    	    	User newUser = new User(reqSplit[1], reqSplit[2], Integer.parseInt(reqSplit[3]));
+
     	    	int regStatus = checkUser(newUser);
     	    	
     	    	//okay register them
@@ -120,39 +119,57 @@ public class UDPServer extends Thread {											//internal server class
     	    		
     	    		fm.updateUserList(registeredUsers);
     	    		
-    	    		
     	    		//if youre the serving server send other server message and then they should do the save as well. 
-    	    		//also they need to record denials... this is a bigger topic I think
     	    		byte[] copiedRegister = Arrays.copyOf(inputBuffer, 56);
-    	    		copiedRegister[0] = 3;
+    	    		copiedRegister[0] = 103;
     	    		sendServer(copiedRegister);
     	    		
     	    		//then respond to user about what has happened
-    	    		sendString("RQ#: " + reqNum, 4, dpReceive.getAddress(), dpReceive.getPort());
+    	    		sendString("You have been registered RQ#: " + reqSplit[0], 4, dpReceive.getAddress(), dpReceive.getPort());
     	    	}
+    	    	
+    	    	//TODO: tell other server about failed registration
     	    	else if (regStatus == 1) {
     	    		//username in use
-    	    		sendString("RQ#: " + reqNum + ": Username taken", 5, dpReceive.getAddress(), dpReceive.getPort());
+    	    		sendString("RQ#: " + reqSplit[0] + ": Username taken", 5, dpReceive.getAddress(), dpReceive.getPort());
     	    	} else if (regStatus == 2) {
     	    		//ip and port in use
-    	    		sendString("RQ#: " + reqNum + ": ip/port combo taken", 5, dpReceive.getAddress(), dpReceive.getPort());
+    	    		sendString("RQ#: " + reqSplit[0] + ": ip/port combo taken", 5, dpReceive.getAddress(), dpReceive.getPort());
     	    	}
     	    	
     	    	break;
     	    	
     	    case 2: //unregister
     	    	
+    	    	//get rid of op code and the single - that follows
+    	    	String deregUserReq = parseString(inputBuffer, 1);
+    	    	
+    	    	//now split out name
+    	    	
+    	    	String[] splitReq = deregUserReq.split("-");
+    	    	
+    	    	for (int i = 0; i < registeredUsers.size(); i++) {
+    	    		if(registeredUsers.get(i).getName().equals(splitReq[1])) {
+    	    			registeredUsers.remove(i);
+    	    			
+    	    			//update file
+    	    			fm.updateUserList(registeredUsers);
+    	    			
+    	    			//tell other server about dereg
+    	    			sendServer(splitReq[1], 104);
+    	    			
+    	    			//tell user hes been deregitered
+    	    			break;
+    	    		}
+    	    	}
+    	    	
+    	    	
+    	    	
+    	    	
+    	    	
     	    }
     	    
     	    switch(inputBuffer[0]) {	//socket input handler that runs even when not serving
-    	    
-    	    case 3: //registration has occured on other server
-    	    	
-    	    	//registerUser(unpackRegisterRequest(inputBuffer));
-    	    	registeredUsers.add(unpackRegisterRequest(inputBuffer));
-    	    	fm.updateUserList(registeredUsers);
-    	    	break;
-    	    	
     	    
     	    case 100:	//server sync: 
     	    	
@@ -192,7 +209,37 @@ public class UDPServer extends Thread {											//internal server class
     	    	isServing = true;	//start serving
     	    	startTimer();		//start timer for next server switch
     	    	break;
+    	    	
+    	    case 103: //registration has occured on other server
+    	    	
+    	    	String regReq = parseString(inputBuffer, 1);
+    	    	
+    	    	String[] reqSplit = regReq.split("-");
+    	    	
+    	    	User newUser = new User(reqSplit[1], reqSplit[2], Integer.parseInt(reqSplit[3]));
+    	    	
+    	    	registeredUsers.add(newUser);
+    	    	fm.updateUserList(registeredUsers);
+    	    	break;
+    	    	
+    	    case 104: //deregister on other server
+    	    	
+    	    	String deregUser = parseString(inputBuffer, 1);
+    	    	
+    	    	for (int i = 0; i < registeredUsers.size(); i++) {
+    	    		if(registeredUsers.get(i).getName().equals(deregUser)) {
+    	    			registeredUsers.remove(i);
+    	    			
+    	    			//update file
+    	    			fm.updateUserList(registeredUsers);
+    	    			
+    	    		}
+    	    	}
+    	    	
+    	    	
     	    }
+    	    
+    	    
     	    
     	    
     	    
@@ -330,12 +377,8 @@ public class UDPServer extends Thread {											//internal server class
    }
    
    
-   //gunna turn this into just a check availability
     private int checkUser(User user) {
     	
-		//check if user is registered
-		//we will maintain a list of users
-		//now check for free username etc.
 		
 		for(User u : registeredUsers) {
 			if(u.getName() == user.getName()) {

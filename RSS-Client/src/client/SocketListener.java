@@ -89,75 +89,19 @@ public class SocketListener extends Thread {
     	
 	}
 	
-	//will be sent those params after
-	public byte[] formatRegisterReq(String name, String ip, int port) {
-		
-		//all params should be checked before this for lengths
-		
-//		String name = "frank";
-//		String ip = "localport"; // dummy address, will all be local host no?
-//		int port = 8888;
-		
-		
-		//now we need to very specifically build the register byte array
-		
-		//format [opcode - 1, RQ# - 1, Name - 20 (10 chars), IP - 30, Socket - 4 (max int size)]
-		
-		byte[] toSend = new byte[56];
-		toSend[0] = 1; //op code
-		toSend[1] = (byte) genRqNum(); //req #
-		
-		//fill name
-		//first get an array for name
-		
-		byte[] temp = name.getBytes();
-		
-		for(int i = 0; i < temp.length; i++) {
-			toSend[2 + i] = temp[i];
-		}
-		
-		toSend[2 + temp.length] = (byte)'-';
-		
-		temp = ip.getBytes();
-		for(int i = 0; i < temp.length; i++) {
-			toSend[22 + i] = temp[i];
-		}
-		
-		toSend[22 + temp.length] = (byte)'-';
-		
-		temp = packIntInBytes(port);
-		for(int i = 0; i < temp.length; i++) {
-			toSend[52 + i] = temp[i];
-		}
-		
-		return toSend;
-		
+	
+	public String formatDeregisterReq(String name) {
+		String formatted = genRqNum() + "-" + name;
+		return formatted;
 	}
 	
-	//this is kind of a special case because we send to both servers,
-	//we could possibly adjust our big sendString to work for all cases
-	public void sendRegistrationRequest(byte[] toSend) {
+	public String formatRegisterReq(String name, String ip, int port) {
 		
-		dpSend = new DatagramPacket(toSend, toSend.length, server1IP, server1Port);
-		
-		try {
-			socket.send(dpSend);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		dpSend = new DatagramPacket(toSend, toSend.length, server2IP, server2Port);
+		String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
+		return formatted;
 		
 		
-		try {
-			socket.send(dpSend);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
-	
 	 
 	private String parseString(byte[] data, int start) { 	//function to convert byte array to string
     	
@@ -173,7 +117,7 @@ public class SocketListener extends Thread {
 		return RNG.nextInt(128);
 	}
 	
-	//used to pack big ints into bytes
+	//used to pack big ints into bytes, was used before but could still come in handy
 	private byte[] packIntInBytes(int i)
 	{
 	  byte[] result = new byte[4];

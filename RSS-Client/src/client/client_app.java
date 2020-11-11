@@ -19,13 +19,23 @@ public class client_app {
 		
 		//socket.sendString("hello world", 0, 1);	//send message, with op 0
 		
-		//lets try a registration...
 		
-		byte[] rr = socket.formatRegisterReq("test", "localhost", 8989);
 		
-		socket.sendRegistrationRequest(rr);
+		//tests for reg and dereg
+		/*
+		String rr = socket.formatRegisterReq("test", "localhost", 8989);
 		
-		int x = 1;
+		//send reg to both servers
+		socket.sendString(rr, 1, 1);
+		socket.sendString(rr, 1, 2);
+		
+		//test a deregistration
+		
+		String dr = socket.formatDeregisterReq("test");
+		socket.sendString(dr, 2, 1);
+		
+		
+		*/
 		
 	}
 	
