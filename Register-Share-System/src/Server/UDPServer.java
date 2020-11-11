@@ -71,6 +71,7 @@ public class UDPServer extends Thread {											//internal server class
     	    
     	    /*	0: test case
     	     * 	1: registration request
+    	     * 	20: client serverSelect ping
     	     * 	100: server sync
     	     * 	101: server sync confirmation
     	     * 	102: server switch
@@ -87,6 +88,12 @@ public class UDPServer extends Thread {											//internal server class
     	    	
     	    case 1: //registration request
     	    	
+    	    	break;
+    	    	
+    	    case 20: //client serverSelect ping
+    	    	sendString("pong", 20, dpReceive.getAddress(), dpReceive.getPort());
+    	    	break;
+    	    	
     	    	
     	    }
     	    
@@ -101,15 +108,15 @@ public class UDPServer extends Thread {											//internal server class
     	    	if(Objects.equals(parseString(inputBuffer,1),"s1")) {	//we are server 1
         	    	dualServerSync = true;	//set server as sync'd
         	    	isServing = true;		//server 1 serves first
-        	    	System.out.println("this server is serving");
         	    	sendServer("s2",100);	//respond to sync other server
     	    	} else {	//we are server 2
     	    		dualServerSync = true;	//set server as sync'd but do not set isServing
     	    		sendServer("s",101);	//respond with sync confirmation to start server1's timer
-    	    		System.out.println("this server is not serving");
     	    		serverSwitchTimer = new Timer();		//initialize server 2's timer
         	    	serverSwitchExec = new TimerExec();		//initialize server2's timerTask
     	    	}
+    	    	if(isServing) System.out.println("this server is serving");
+    	    	else System.out.println("this server is not serving");
     	    	break;
     	    	
     	    case 101: //server sync confirmation
