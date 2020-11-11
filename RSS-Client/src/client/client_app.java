@@ -17,7 +17,15 @@ public class client_app {
 		socket = new SocketListener(server1IP, server2IP, server1Port, server2Port, localPort);
 		socket.start();
 		
-		socket.sendString("hello world", 0, 1);	//send message, with op 0
+		//socket.sendString("hello world", 0, 1);	//send message, with op 0
+		
+		//lets try a registration...
+		
+		byte[] rr = socket.formatRegisterReq("test", "localhost", 8989);
+		
+		socket.sendRegistrationRequest(rr);
+		
+		int x = 1;
 		
 	}
 	

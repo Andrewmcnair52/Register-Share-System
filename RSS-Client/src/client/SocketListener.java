@@ -6,6 +6,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Random;
+
 
 
 public class SocketListener extends Thread {
@@ -17,6 +19,8 @@ public class SocketListener extends Thread {
 	private DatagramSocket socket;
 	private InetAddress server1IP, server2IP;
 	private int localPort, server1Port, server2Port;
+	
+	private Random RNG = new Random(System.currentTimeMillis());
 	
 	public SocketListener(String inServer1IP, String inServer2IP, int inServer1Port, int inServer2Port, int inLocalPort) {
 		inputBuffer = new byte[BUFF_SIZE];
@@ -57,6 +61,7 @@ public class SocketListener extends Thread {
     	    	
     	    default:
     	    	client_app.display("invalid operation recieved, initial byte out of range");
+    	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
     	    }
     	    
     	    
@@ -84,32 +89,109 @@ public class SocketListener extends Thread {
     	
 	}
 	
-	
-	public void formatRegisterReq() {
-		int regId = 0; // we will have to give all requests codes
-		int rqNum = 1; //whats this?
-		String name = "frank";
-		String ip = "192.168.1.1"; // dummy address, will all be local host no?
-		int socket = localPort; //socket = port?
+	//will be sent those params after
+	public byte[] formatRegisterReq(String name, String ip, int port) {
 		
-		String registerReq = regId + rqNum + name + ip + socket;
+		//all params should be checked before this for lengths
 		
-		
-		sendString(registerReq, 0, 1);
+//		String name = "frank";
+//		String ip = "localport"; // dummy address, will all be local host no?
+//		int port = 8888;
 		
 		
+		//now we need to very specifically build the register byte array
 		
+		//format [opcode - 1, RQ# - 1, Name - 20 (10 chars), IP - 30, Socket - 4 (max int size)]
+		
+		byte[] toSend = new byte[56];
+		toSend[0] = 1; //op code
+		toSend[1] = (byte) genRqNum(); //req #
+		
+		//fill name
+		//first get an array for name
+		
+		byte[] temp = name.getBytes();
+		
+		for(int i = 0; i < temp.length; i++) {
+			toSend[2 + i] = temp[i];
+		}
+		
+		toSend[2 + temp.length] = (byte)'-';
+		
+		temp = ip.getBytes();
+		for(int i = 0; i < temp.length; i++) {
+			toSend[22 + i] = temp[i];
+		}
+		
+		toSend[22 + temp.length] = (byte)'-';
+		
+		temp = packIntInBytes(port);
+		for(int i = 0; i < temp.length; i++) {
+			toSend[52 + i] = temp[i];
+		}
+		
+		return toSend;
 		
 	}
 	
+	//this is kind of a special case because we send to both servers,
+	//we could possibly adjust our big sendString to work for all cases
+	public void sendRegistrationRequest(byte[] toSend) {
+		
+		dpSend = new DatagramPacket(toSend, toSend.length, server1IP, server1Port);
+		
+		try {
+			socket.send(dpSend);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		dpSend = new DatagramPacket(toSend, toSend.length, server2IP, server2Port);
+		
+		
+		try {
+			socket.send(dpSend);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	 
-	String parseString(byte[] data, int start) { 	//function to convert byte array to string
+	private String parseString(byte[] data, int start) { 	//function to convert byte array to string
     	
         if (data == null) return null; 
         String out = new String(); 
         for(int i=start; data[i]!=0; i++)
         	out += ((char) data[i]); 
-        return out; 
+        return out;
+    }
+	
+	//only returning 0 - 127 so that it can be downcast to a byte. 
+	private int genRqNum() {
+		return RNG.nextInt(128);
+	}
+	
+	//used to pack big ints into bytes
+	private byte[] packIntInBytes(int i)
+	{
+	  byte[] result = new byte[4];
+
+	  result[0] = (byte) (i >> 24);
+	  result[1] = (byte) (i >> 16);
+	  result[2] = (byte) (i >> 8);
+	  result[3] = (byte) (i);
+
+	  return result;
+	}
+	
+	// get an int back from bytes
+    private int fromByteArray(byte[] bytes) {
+         return ((bytes[0] & 0xFF) << 24) | 
+                ((bytes[1] & 0xFF) << 16) | 
+                ((bytes[2] & 0xFF) << 8 ) | 
+                ((bytes[3] & 0xFF) << 0 );
     }
 	
 	
