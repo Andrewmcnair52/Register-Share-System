@@ -1,5 +1,5 @@
 /Register-Share-System/bin
 /RSS-Client/bin
-/ExternalJars
 *.classpath
 *.project
+*.json
