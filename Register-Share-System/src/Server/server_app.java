@@ -42,7 +42,7 @@ public class server_app {
 			
 			if (fnbuff[0] != firstRC) {
 				filename = String.valueOf(fnbuff);
-				filename = filename.substring(0,filename.length());
+				filename = filename.substring(0,filename.indexOf(firstRC));
 				filename2 = filename + "2";
 			}
 			
