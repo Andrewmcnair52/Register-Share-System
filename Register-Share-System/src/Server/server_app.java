@@ -37,9 +37,12 @@ public class server_app {
 			char[] fnbuff = new char[64];
 			cin.read(fnbuff);
 			
-			if (fnbuff[0] !='\r') {
+			byte[] returnChar = System.getProperty("line.separator").getBytes();
+			char firstRC = (char)returnChar[0];
+			
+			if (fnbuff[0] != firstRC) {
 				filename = String.valueOf(fnbuff);
-				filename = filename.substring(0,filename.indexOf('\r'));
+				filename = filename.substring(0,filename.length());
 				filename2 = filename + "2";
 			}
 			
