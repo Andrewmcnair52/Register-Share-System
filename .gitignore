@@ -1,2 +1,5 @@
 /Register-Share-System/bin
 /RSS-Client/bin
+*.classpath
+*.project
+*.json
