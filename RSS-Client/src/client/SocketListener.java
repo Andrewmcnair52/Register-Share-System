@@ -59,6 +59,16 @@ public class SocketListener extends Thread {
 
     	    	break;
     	    	
+    	    case 4:
+    	    	
+    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	break;
+    	    	
+    	    case 5:
+    	    	
+    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	break;
+    	    
     	    default:
     	    	client_app.display("invalid operation recieved, initial byte out of range");
     	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
