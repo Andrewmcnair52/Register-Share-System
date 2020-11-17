@@ -20,6 +20,8 @@ public class SocketListener extends Thread {
 	private InetAddress server1IP, server2IP;
 	private int localPort, server1Port, server2Port;
 	
+	ClientFileManager fm = new ClientFileManager();
+	
 	private Random RNG = new Random(System.currentTimeMillis());
 	
 	public SocketListener(String inServer1IP, String inServer2IP, int inServer1Port, int inServer2Port, int inLocalPort) {
@@ -47,26 +49,37 @@ public class SocketListener extends Thread {
     	    try { socket.receive(dpReceive); }			//wait till data is received
     	    catch (IOException e) { e.printStackTrace(); System.out.println("socketException while recieving data");}
     	    
+    	    
     	    //----------------------------
     	    // client input parser/handler
     	    //----------------------------
+    	    
+    	    
+    	    /*
+    	     * 0: Test Case
+    	     * 4: Registation Accepted
+    	     * 5: Registration Denied
+    	     */
+    	    
     	    
     	    switch(inputBuffer[0]) {
 	    	
     	    case 0:	// a test case, print message to console
 
-    	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
-
+    	    	client_app.display("data recieved, from server" + parseString(inputBuffer, 1));
+    	    	fm.log("Test case received", inputBuffer);
     	    	break;
     	    	
     	    case 4:
     	    	
     	    	client_app.display(parseString(inputBuffer, 1));
+    	    	fm.log("Registration accepted recieved", inputBuffer);
     	    	break;
     	    	
     	    case 5:
     	    	
     	    	client_app.display(parseString(inputBuffer, 1));
+    	    	fm.log("Registration denied recieved", inputBuffer);
     	    	break;
     	    
     	    default:
