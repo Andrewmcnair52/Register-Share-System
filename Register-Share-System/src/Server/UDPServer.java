@@ -38,6 +38,7 @@ public class UDPServer extends Thread {											//internal server class
 	Random rand = new Random();
 	
 	ArrayList<User> registeredUsers;
+	ArrayList<Subject> subjects;
 	FileManager fm;
 	
 	
