@@ -78,7 +78,6 @@ public class UDPServer extends Thread {											//internal server class
     	    catch (IOException e) { e.printStackTrace(); System.out.println("socketException while recieving data");}
     	    
     	    
-    	    
     	    //----------------------------
     	    // server input parser/handler
     	    //----------------------------
@@ -101,11 +100,13 @@ public class UDPServer extends Thread {											//internal server class
     	    switch(inputBuffer[0]) {
     	    	
     	    case 0:	// a test case, print message to console, and respond with 'message received'
+    	    	fm.log("Test Case Received", inputBuffer);
     	    	server_app.display("data recieved from client: "+parseString(inputBuffer,1));	//convert data to string, then send to main for displaying
     	    	sendString("message recieved", 0, dpReceive.getAddress(), dpReceive.getPort());	//send response
     	    	break;
     	    	
     	    case 1: //registration request
+    	    	fm.log("Register Received", inputBuffer);
     	    	
     	    	String regReq = parseString(inputBuffer, 1);
     	    	
@@ -126,6 +127,7 @@ public class UDPServer extends Thread {											//internal server class
     	    		//if youre the serving server send other server message and then they should do the save as well. 
     	    		byte[] copiedRegister = Arrays.copyOf(inputBuffer, 56);
     	    		copiedRegister[0] = 103;
+    	    		fm.log("Sending Registration Notice", copiedRegister);
     	    		sendServer(copiedRegister);
     	    		
     	    		//then respond to user about what has happened
@@ -144,6 +146,7 @@ public class UDPServer extends Thread {											//internal server class
     	    	break;
     	    	
     	    case 2: //unregister
+    	    	fm.log("Unregister Received", inputBuffer);
     	    	
     	    	//get rid of op code and the single - that follows
     	    	String deregUserReq = parseString(inputBuffer, 1);
@@ -160,6 +163,7 @@ public class UDPServer extends Thread {											//internal server class
     	    			fm.updateUserList(registeredUsers);
     	    			
     	    			//tell other server about dereg
+    	    			fm.log("Sending deregistration notice");
     	    			sendServer(splitReq[1], 104);
     	    			
     	    			//tell user hes been deregitered
@@ -255,6 +259,7 @@ public class UDPServer extends Thread {											//internal server class
     	    switch(inputBuffer[0]) {	//socket input handler that runs even when not serving
     	    
     	    case 100:	//server sync: 
+    	    	fm.log("Server Sync Received", inputBuffer);
     	    	
     	    	//save info for other server
     	    	otherServerIP = dpReceive.getAddress();
@@ -264,9 +269,11 @@ public class UDPServer extends Thread {											//internal server class
         	    	dualServerSync = true;	//set server as sync'd
         	    	isServing = true;		//server 1 serves first
         	    	//System.out.println("this server is serving");
+        	    	fm.log("Sending sync to other server");
         	    	sendServer("s2",100);	//respond to sync other server
     	    	} else {	//we are server 2
     	    		dualServerSync = true;	//set server as sync'd but do not set isServing
+    	    		fm.log("Sending sync confirmation");
     	    		sendServer("s",101);	//respond with sync confirmation to start server1's timer
     	    		//System.out.println("this server is not serving");
     	    		serverSwitchTimer = new Timer();		//initialize server 2's timer
@@ -281,6 +288,7 @@ public class UDPServer extends Thread {											//internal server class
     	    	break;
     	    	
     	    case 101: //server sync confirmation
+    	    	fm.log("Server Sync Confirmation Received", inputBuffer);
     	    	
     	    	//if we're here, then both servers are now sync'd and this is server 1
     	    	//start serverSwitchTimer
@@ -288,12 +296,14 @@ public class UDPServer extends Thread {											//internal server class
     	    	break;
     	    
     	    case 102: //server switch
+    	    	fm.log("Server Switch Received", inputBuffer);
     	    	//other server has notified us that of a server switch
     	    	isServing = true;	//start serving
     	    	startTimer();		//start timer for next server switch
     	    	break;
     	    	
     	    case 103: //registration has occured on other server
+    	    	fm.log("Registration on other Server Received", inputBuffer);
     	    	
     	    	String regReq = parseString(inputBuffer, 1);
     	    	
@@ -306,6 +316,7 @@ public class UDPServer extends Thread {											//internal server class
     	    	break;
     	    	
     	    case 104: //deregister on other server
+    	    	fm.log("Unregister on other server Received", inputBuffer);
     	    	
     	    	String deregUser = parseString(inputBuffer, 1);
     	    	
@@ -402,7 +413,7 @@ public class UDPServer extends Thread {											//internal server class
 		   System.out.println("timer triggered, switching servers");
 		   
 		   //notify registered clients, this can only be done after there are registered clients(FRANK)
-		   
+		   fm.log("Sending server switch notice to other server");
 		   sendServer("",102);	//notify other server first
 		   isServing = false;	//stop serving
 		   
