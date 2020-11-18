@@ -175,6 +175,8 @@ public class UDPServer extends Thread {											//internal server class
     	    	
     	    case 11: //publish
     	    	
+    	    	fm.log("Publish Request Received", inputBuffer);
+    	    	
     	    	//first disect message
     	    	String pReq = parseString(inputBuffer, 1);
     	    	
@@ -236,6 +238,7 @@ public class UDPServer extends Thread {											//internal server class
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+    	    			fm.log("Publishing message", pReqSplit[0] + " " + pReqSplit[1] + " " + pReqSplit[3]);
     	    			sendString(pReqSplit[0] + " " + pReqSplit[1] + " " + pReqSplit[3], 6, uAd, u.getSocket() );
     	    		}
     	    		

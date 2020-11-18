@@ -85,6 +85,7 @@ public class SocketListener extends Thread {
     	    case 6: //receive message
     	    	
     	    	client_app.display(parseString(inputBuffer, 1));
+    	    	fm.log("Publish Message Received", inputBuffer);
     	    	break;
     	    
     	    default:

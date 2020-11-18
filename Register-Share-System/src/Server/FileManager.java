@@ -122,7 +122,18 @@ public void updateUserList(List<User> userList) {
 		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
-			output.write(java.time.LocalTime.now() + message + ": " + sMes + System.getProperty("line.separator"));
+			output.write(java.time.LocalTime.now() + message + " : " + sMes + System.getProperty("line.separator"));
+			output.close();
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void log(String message, String sMes) {
+		
+		try {
+			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
+			output.write(java.time.LocalTime.now() + message + " : " + sMes + System.getProperty("line.separator"));
 			output.close();
 		}catch(Exception e) {
 			e.printStackTrace();
