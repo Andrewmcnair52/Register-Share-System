@@ -11,8 +11,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -121,7 +123,7 @@ public class UDPServer extends Thread {											//internal server class
     	    		
     	    		fm.updateUserList(registeredUsers);
     	    		
-    	    		//if youre the serving server send other server message and then they should do the save as well. 
+    	    		//if you're the serving server send other server message and then they should do the save as well. 
     	    		byte[] copiedRegister = Arrays.copyOf(inputBuffer, 56);
     	    		copiedRegister[0] = 103;
     	    		fm.log("Sending Registration Notice", copiedRegister);
@@ -323,9 +325,22 @@ public class UDPServer extends Thread {											//internal server class
 		   System.out.println("timer triggered, switching servers");
 		   System.out.println("this server is no longer serving serving\n");
 		   
-		   //notify registered clients, this can only be done after there are registered clients(FRANK)
 		   fm.log("Sending server switch notice to other server");
-		   sendServer("",102);	//notify other server first
+		   
+			//notify other server first
+		   sendServer("",102);
+		   
+		 //notify registered users of server switch
+		   Iterator<User> it = registeredUsers.iterator();
+		   while(it.hasNext()) { 
+			   User tmpUser = it.next();
+			   try {
+			       if(tmpUser.getIp().equals("localhost")) sendString("", 51, InetAddress.getLocalHost(), tmpUser.getSocket());
+			       else sendString("", 51, InetAddress.getByName(tmpUser.getIp()), tmpUser.getSocket());
+			   } catch(UnknownHostException e) { 
+				   server_app.display("cant update client about server switch, cannot parse ip: "+tmpUser.getIp());
+			   }
+		   }
 		   isServing = false;	//stop serving
 		   
 	   }
@@ -340,8 +355,8 @@ public class UDPServer extends Thread {											//internal server class
 	   serverSwitchExec = new TimerExec();
 
 	   //project description says to "pick a random value say 5m"
-	   //int val = 240000 + rand.nextInt(360000); //pick a value between 240,000 and 360,000 (4m-6m)
-	   int val = 10000 + rand.nextInt(2000);	//10-12 seconds, left here for debugging purposes
+	   int val = 240000 + rand.nextInt(360000); //pick a value between 240,000 and 360,000 (4m-6m)
+	   //int val = 20000 + rand.nextInt(2000);	//20-22 seconds, left here for debugging purposes
 	   System.out.println("server switch in: " + val + "\n");
    	
 	   //schedule(TimerTask task, Date time)

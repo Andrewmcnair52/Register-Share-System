@@ -90,6 +90,10 @@ public class SocketListener extends Thread {
     	     * 0: Test Case
     	     * 4: Registation Accepted
     	     * 5: Registration Denied
+    	     * 
+    	     * 50: server init
+    	     * 51: server switch notification
+    	     * 
     	     */
 
     	    switch(inputBuffer[0]) {
@@ -124,6 +128,12 @@ public class SocketListener extends Thread {
     					
     			send_lock = false;	//allow sending now that we know servers are up and serverSelect is initialized
     			client_app.display("initialization complete");
+    	    	break;
+    	    	
+    	    case 51: //server switch notification
+    	    	client_app.display("received notification of server switch\n");
+    	    	if(serverSelect==1) serverSelect = 2;
+    	    	else serverSelect = 1;
     	    	break;
     	    	
     	    default:
