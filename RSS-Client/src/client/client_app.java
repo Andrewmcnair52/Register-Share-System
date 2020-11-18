@@ -22,7 +22,7 @@ public class client_app {
 		
 		
 		//tests for reg and dereg
-		/*
+		
 		String rr = socket.formatRegisterReq("test", "localhost", 8989);
 		
 		//send reg to both servers
@@ -35,7 +35,7 @@ public class client_app {
 		socket.sendString(dr, 2, 1);
 		
 		
-		*/
+		
 		
 	}
 	
