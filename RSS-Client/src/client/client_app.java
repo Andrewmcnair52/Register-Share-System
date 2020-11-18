@@ -22,8 +22,8 @@ public class client_app {
 		
 		
 		//tests for reg and dereg
-		/*
-		String rr = socket.formatRegisterReq("test", "localhost", 8989);
+		
+		String rr = socket.formatRegisterReq("test", "localhost", 6055);
 		
 		//send reg to both servers
 		socket.sendString(rr, 1, 1);
@@ -31,11 +31,14 @@ public class client_app {
 		
 		//test a deregistration
 		
-		String dr = socket.formatDeregisterReq("test");
-		socket.sendString(dr, 2, 1);
+		//String dr = socket.formatDeregisterReq("test");
+		//socket.sendString(dr, 2, 1);
 		
 		
-		*/
+		
+		
+		String mr = socket.formatPublishReq("test", "Books", "Books are so dope!");
+		socket.sendString(mr, 11, 1);
 		
 	}
 	

@@ -11,6 +11,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -48,6 +49,7 @@ public class UDPServer extends Thread {											//internal server class
     	fm = new FileManager(fileName + ".json");
     	
     	registeredUsers = new ArrayList<User>();
+    	subjects = new ArrayList<Subject>();
     	//if we start a new server... should we attempt to reload the file, ask for it, etc?
     	
     	if (restore == 1) {
@@ -84,6 +86,7 @@ public class UDPServer extends Thread {											//internal server class
     	    /*	0: test case
     	     * 	1: registration request
     	     *  2: deregister
+    	     *  11: publish
     	     * 	100: server sync
     	     * 	101: server sync confirmation
     	     * 	102: server switch
@@ -163,6 +166,85 @@ public class UDPServer extends Thread {											//internal server class
     	    			break;
     	    		}
     	    	}
+    	    	
+    	    	break;
+    	    	
+    	    case 11: //publish
+    	    	
+    	    	//first disect message
+    	    	String pReq = parseString(inputBuffer, 1);
+    	    	
+    	    	String[] pReqSplit = pReq.split("-");
+    	    	
+    	    	//check to see if interest exists
+    	    	//and save it
+    	    	
+    	    	ArrayList<String> users = null;
+    	    	
+    	    	boolean subjectExist = false;
+    	    	int subject = -1;
+    	    	
+    	    	for (int i = 0; i < subjects.size(); i++) {
+    	    		if (subjects.get(i).getName().equals(pReqSplit[2])) {
+    	    			subjectExist = true;
+    	    			subject = i;
+    	    			break;
+    	    		}
+    	    	}
+    	    	
+    	    	boolean userHasSub = false;
+    	    	
+    	    	if (subjectExist) {
+    	    		users = subjects.get(subject).getUsers();
+    	    		for (String user : users) {
+    	    			if (user.equals(pReqSplit[1])) {
+    	    				userHasSub = true;
+    	    				break;
+    	    			}
+    	    		}
+    	    	}
+    	    	
+    	    	//collect their infoooooo... this merits a little thought i guessss...
+    	    	// so in retro, it would have been better for subjects to store users as a whole
+    	    	// cause now i got to go through the user list to find their addresses... which is like an m * n problem... almost like O(n^2)..
+    	    	// would rather be a little space inefficient.. will be an easy fix
+    	    	
+    	    	ArrayList<User> usersToSendTo = new ArrayList<>();
+    	    	
+    	    	
+    	    	//also this sends back to the sending user but fuck it ill fix it later when i redo this shit
+    	    	if (subjectExist && userHasSub) {
+    	    		for(int i = 0; i < users.size(); i++) {
+    	    			String check = users.get(i);
+    	    			for (int j = 0; j < registeredUsers.size(); j++) {
+    	    				if(check.equals(registeredUsers.get(j).getName())){
+    	    					usersToSendTo.add(registeredUsers.get(j));
+    	    				}
+    	    			}
+    	    		}
+    	    		
+    	    		//now send the messages
+    	    		for(User u : usersToSendTo) {
+    	    			InetAddress uAd = null;
+    	    			try {
+							uAd = InetAddress.getByName(u.getIp());
+						} catch (UnknownHostException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+    	    			sendString(pReqSplit[0] + " " + pReqSplit[1] + " " + pReqSplit[3], 6, uAd, u.getSocket() );
+    	    		}
+    	    		
+    	    	}
+    	    	
+    	    	
+    	    	//if it does does this user have it?
+    	    	// okay send to all users that have it with this format
+    	    	//message - name - subject - text
+    	    	
+    	    	//if not send back DENIED! - rq - reason
+    	    	
+    	    	break;
     	    	
     	    	
     	    	

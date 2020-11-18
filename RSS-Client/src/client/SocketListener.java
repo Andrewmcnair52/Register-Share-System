@@ -68,6 +68,11 @@ public class SocketListener extends Thread {
     	    	
     	    	client_app.display(parseString(inputBuffer, 1));
     	    	break;
+    	    	
+    	    case 6: //receive message
+    	    	
+    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	break;
     	    
     	    default:
     	    	client_app.display("invalid operation recieved, initial byte out of range");
@@ -110,6 +115,15 @@ public class SocketListener extends Thread {
 		String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
 		return formatted;
 		
+		
+	}
+	
+	
+	//the name would be replaced if some kind of login was implemented.. 
+	public String formatPublishReq(String name, String subject, String text) {
+		
+		String formatted = genRqNum() + "-" + name + "-" + subject + "-" + text;
+		return formatted;
 		
 	}
 	 
