@@ -1,9 +1,7 @@
 package client;
-
 import java.util.Enumeration;
 import java.util.Vector;
 import java.util.Scanner;
-
 public class client_app {
 	
 	public static int localPort = 6055;				//client port number
@@ -16,12 +14,14 @@ public class client_app {
 	public static SocketListener socket;
 
 	public static void main(String[] args) {
+
 		//start socket listener thread
+		socket = new SocketListener(server1IP, server2IP, server1Port, server2Port, localPort);
+		socket.start();
+		
 		Scanner in = new Scanner(System.in);
 		Scanner stg = new Scanner(System.in);
 		boolean stop=false;
-		socket = new SocketListener(server1IP, server2IP, server1Port, server2Port, localPort);
-		socket.start();
 		boolean checked = false;
 		System.out.println("Welcome to client console");
 		while(!stop) {
@@ -33,57 +33,61 @@ public class client_app {
 	        System.out.println("4\t Update subject of interest");
 	        System.out.println("5\t Publish on a subject of interest");
 	        System.out.println("6\t Stop the client app");
-	        // Assuming the request numbers correspond to the option the user chooses
-	        
-			while (!in.hasNextInt()) in.next();
+	        System.out.print("> ");
+	        while (!in.hasNextInt()) in.next();
 			int select = in.nextInt();
 			switch(select){
 			case 0: String test="";
 					System.out.println("\t  Enter a word to be sent");
+					System.out.print("> ");
 					Scanner scan = new Scanner(System.in);
 					test+=scan.nextLine();
-			        scan.close();
-					socket.sendString1(test, 0);
-					System.out.println(select);
+			        //scan.close();
+					socket.sendString(test, 0,1);
 				break;
-			case 1: String registration = "Request 1, ";
-					System.out.println("\t  Enter the name"); 
-					String nameInput = in.next();
-					registration=  registration + nameInput+", ";
-					System.out.println("\t  Enter the Ip Address"); 
-					String IpAddressInput = in.next();
-					registration=registration+IpAddressInput+", ";
-					System.out.println("\t  Enter the socket number"); 
-					String socketInput = in.next();
-					registration=registration+socketInput;
-					socket.sendString1(registration, 1);
-			   break;
-			case 2: System.out.println("Deregistration is not done yet"); 
-			   break;
-
-			case 3: String update = "Request 3, ";
-			System.out.println("\t  Enter the user name you want to update"); 
-			String userNameUpdate = in.next();
-			update=  update + userNameUpdate+", ";
-			System.out.println("\t  Update name"); 
+			case 1: 
+			System.out.println("\t  Enter the name");
+			System.out.print("> ");
+			String nameInput = in.next();
+			System.out.println("\t  Enter the Ip Address");
+			System.out.print("> ");
+			String IpAddressInput = in.next();
+			System.out.println("\t  Enter the socket number");
+			System.out.print("> ");
+			int socketInput = in.nextInt();
+			String rr = socket.formatRegisterReq(nameInput, IpAddressInput, socketInput);
+			socket.sendString(rr, 1, 1);
+			socket.sendString(rr, 1, 2);
+				break;
+			case 2: 
+				System.out.println("\t  Enter the name"); 
+				System.out.print("> ");
+				nameInput = in.next();
+				String dr = socket.formatDeregisterReq(nameInput);
+				socket.sendString(dr, 2, 1);
+				socket.sendString(dr, 2, 2);
+				break;
+			case 3: 
+			System.out.println("\t  Enter the user's name you want to update");
 			String nameUpdate = in.next();
-			update=  update + nameUpdate+", ";
 			System.out.println("\t  Update Ip Address"); 
-			String IpAddressUpdate = in.next();
-			update=  update+IpAddressUpdate+", ";
+			String IpAddressUpdate = in.next();;
 			System.out.println("\t  Update socket number"); 
-			String socketUpdate = in.next();
-			update=  update+socketUpdate;
-			socket.sendString1(update, 3);		
+			int socketUpdate = in.nextInt();
+			String ur = socket.formatUpdateReq(nameUpdate, IpAddressUpdate, socketUpdate);
+			socket.sendString(ur, 3,1);
+			socket.sendString(ur, 3,2);		
 			   break;
-			case 4: System.out.println("\t  What is the user's name?"); 
+			case 4: System.out.println("\t  Not completed yet");
+				/*System.out.println("\t  What is the user's name?"); 
 				String userName = in.next();
 				System.out.println("\t  Add a subject of interest"); 
 				String subjectInput = in.next();
-				socket.sendString1(subjectInput, 4);	
-				break; 
-			case 5: System.out.println("Publication on a subject of interest is not done yet"); 
-			   break;	
+				String sr = socket.formatSubjectReq(userName, subjectInput);
+				socket.sendString(sr, 4, 1);
+				socket.sendString(sr, 4, 2);
+				break;
+				*/
 			case 6: System.out.println("Stopping the app");
 				stop = true;
 			   break;
@@ -91,19 +95,27 @@ public class client_app {
 			
 			
 		}
+	        
+		socket.sendString("hello world", 1, 1);
+		
+		
+		//tests for reg and dereg
+		
+		String rr = socket.formatRegisterReq("test", "localhost", 8989);
+		
+		//send reg to both servers
+		socket.sendString(rr, 1, 1);
+		socket.sendString(rr, 1, 2);
+		
+		//test a deregistration
+		//String dr = socket.formatDeregisterReq("test");
+		//socket.sendString(dr, 2, 1);
+		
+		
 		
 		
 	}
-	public static void sendingUserData(client_User user){
-		
-		socket.sendString1(user.getName(), 0);
-		socket.sendString1(user.getIp_address(), 0);
-		socket.sendString1(String.valueOf(user.getSocketNumber()), 0);
-		Enumeration enu = user.getSubjectOfInterestVector().elements();
-		while(enu.hasMoreElements()) {
-			socket.sendString1(enu.nextElement().toString()+" ", 0);
-		}
-	}
+	
 	public static void display(String in) {
 		//hopefully print to a GUI one day, console for now
 		System.out.println(in);
