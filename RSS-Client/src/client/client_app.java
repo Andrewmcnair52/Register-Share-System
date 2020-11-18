@@ -19,11 +19,6 @@ public class client_app {
 		socket = new SocketListener(server1IP, server2IP, server1Port, server2Port, localPort);
 		socket.start();
 		
-		try { System.in.read(); }
-		catch (IOException e) { e.printStackTrace(); }
-		
-		socket.sendString("hello world", 0);
-		
 		
 	}
 	

@@ -64,7 +64,7 @@ public class UDPServer extends Thread {											//internal server class
     
     public void run() {
     	
-    	System.out.println("starting UDP server");
+    	System.out.println("starting UDP server\n");
     	
     	
 		
@@ -99,7 +99,7 @@ public class UDPServer extends Thread {											//internal server class
     	    case 0:	// a test case, print message to console, and respond with 'message received'
     	    	fm.log("Test Case Received", inputBuffer);
     	    	server_app.display("data recieved from client: "+parseString(inputBuffer,1));	//convert data to string, then send to main for displaying
-    	    	//sendString("message recieved", 0, dpReceive.getAddress(), dpReceive.getPort());	//send response
+    	    	sendString("message recieved", 0, dpReceive.getAddress(), dpReceive.getPort());	//send response
     	    	break;
     	    	
     	    case 1: //registration request
@@ -200,7 +200,7 @@ public class UDPServer extends Thread {											//internal server class
         	    	serverSwitchExec = new TimerExec();		//initialize server2's timerTask
     	    	}
     	    	if(isServing) System.out.println("this server is serving");
-    	    	else System.out.println("this server is not serving");
+    	    	else System.out.println("this server is not serving\n");
     	    	break;
     	    	
     	    case 101: //server sync confirmation
@@ -215,6 +215,7 @@ public class UDPServer extends Thread {											//internal server class
     	    	fm.log("Server Switch Received", inputBuffer);
     	    	//other server has notified us that of a server switch
     	    	isServing = true;	//start serving
+    	    	server_app.display("this server is now serving");
     	    	startTimer();		//start timer for next server switch
     	    	break;
     	    	
@@ -320,6 +321,7 @@ public class UDPServer extends Thread {											//internal server class
    class TimerExec extends TimerTask {
 	   public void run() { 
 		   System.out.println("timer triggered, switching servers");
+		   System.out.println("this server is no longer serving serving\n");
 		   
 		   //notify registered clients, this can only be done after there are registered clients(FRANK)
 		   fm.log("Sending server switch notice to other server");
@@ -338,9 +340,9 @@ public class UDPServer extends Thread {											//internal server class
 	   serverSwitchExec = new TimerExec();
 
 	   //project description says to "pick a random value say 5m"
-	   int val = 240000 + rand.nextInt(360000); //pick a value between 240,000 and 360,000 (4m-6m)
-	   //int val = 10000 + rand.nextInt(2000);	//10-12 seconds, left here for debuggin purposes
-	   System.out.println("server switch in: " + val);
+	   //int val = 240000 + rand.nextInt(360000); //pick a value between 240,000 and 360,000 (4m-6m)
+	   int val = 10000 + rand.nextInt(2000);	//10-12 seconds, left here for debugging purposes
+	   System.out.println("server switch in: " + val + "\n");
    	
 	   //schedule(TimerTask task, Date time)
 	   // task: task to run

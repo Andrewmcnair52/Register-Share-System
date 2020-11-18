@@ -99,22 +99,4 @@ public class server_app {
 		
 	}
 	
-	//test for file stuff... gunna leave it here for now
-//	public static void main(String[] args) {
-//		FileManager test = new FileManager("test.json");
-//		
-//		User u = new User("Frank", "localhost", 8888);
-//		User u2 = new User("Frank2", "localhost", 8888);
-//		
-//		List<User> list = new ArrayList<User>();
-//		list.add(u);
-//		list.add(u2);
-//		
-//		test.saveUserList(list);
-//		
-//		List<User> retList = test.loadUserList();
-//		
-//		System.out.println(retList.toString());
-//		
-//	}
 }

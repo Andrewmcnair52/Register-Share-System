@@ -34,6 +34,8 @@ public class SocketListener extends Thread {
 	boolean awaitingResponse = false;		//only for sendTimeout
 	
 	Timer sendTimeout, initTimeout;
+	initTimeoutTask initTask;
+	sendTimeoutTask sendTask;
 	
 	
 	public SocketListener(String inServer1IP, String inServer2IP, int inServer1Port, int inServer2Port, int inLocalPort) {
@@ -72,7 +74,7 @@ public class SocketListener extends Thread {
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     			
     	    try { socket.receive(dpReceive); }			//wait till data is received
-    	    catch (IOException e) { System.out.println("socketException while recieving data"); return; }
+    	    catch (IOException e) { System.out.println("stopping SocketListener"); return; }
     	    
     	    if(awaitingResponse) {
     	    	stopSendTimeout();	//stop timer, also resets awaitingResponse
@@ -108,6 +110,7 @@ public class SocketListener extends Thread {
     	    	break;
     	    	
     	    case 50: //server init
+    	    	client_app.display("message received");
     	    	stopInitTimeout();						//stop timer on server response
 				
     			//if we're here server has responded, set serverSelect
@@ -120,6 +123,7 @@ public class SocketListener extends Thread {
     			}
     					
     			send_lock = false;	//allow sending now that we know servers are up and serverSelect is initialized
+    			client_app.display("initialization complete");
     	    	break;
     	    	
     	    default:
@@ -176,11 +180,15 @@ public class SocketListener extends Thread {
 	
 	public void runInit() {
 		
+		client_app.display("\nrunning initialization with server");
+		
 		//initialize serverSelect(servers must be started before client)
 		//send a ping message to both servers to see which responds
 		outputBuffer = new byte[1];
 		outputBuffer[0] = (byte) 50;	//ping message
-				
+		
+		startInitTimeout();	//start first, otherwise we might hear back before timer is started
+		
 		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server1IP, server1Port);
 		try { socket.send(dpSend); }	//send data
 		catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
@@ -189,8 +197,8 @@ public class SocketListener extends Thread {
 		try { socket.send(dpSend); }	//send data
 		catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
 				
-		client_app.display("awaiting server connection...");
-		startInitTimeout();
+		client_app.display("awaiting server connection...\n");
+		
 		
 	}
 	
@@ -262,7 +270,6 @@ public class SocketListener extends Thread {
 	   class sendTimeoutTask extends TimerTask {
 		   public void run() {
 			   client_app.display("timeout expired, no response from server about last sent message");
-			   client_app.display("reinitializing ...");
 			   awaitingResponse = false;
 			   runInit();
 		   }
@@ -273,27 +280,33 @@ public class SocketListener extends Thread {
 		   
 		   if(initTimeout!=null) { initTimeout.cancel(); initTimeout.purge(); }
 		   initTimeout = new Timer();
-		   initTimeout.schedule(new initTimeoutTask(), 5000);	//5s timeout
+		   initTask = new initTimeoutTask();
+		   initTimeout.schedule(initTask, 5000);	//5s timeout
 	   	
 	   }
 	   
 	  public void startSendTimeout() {
 		  if(sendTimeout!=null) { sendTimeout.cancel(); sendTimeout.purge(); }
 		  sendTimeout = new Timer();
-		  sendTimeout.schedule(new sendTimeoutTask(), 5000);	//5s timeout
+		  sendTask = new sendTimeoutTask();
+		  sendTimeout.schedule(sendTask, 5000);	//5s timeout
 		  awaitingResponse = true;
 	  }
 	  
 	  public void stopInitTimeout() {
-		  initTimeout.cancel();
-		  initTimeout.purge();
-		  initTimeout = null;
+		  if(initTimeout==null) client_app.display("cant stop initTimeout because its null");
+		  else {
+			  initTimeout.cancel();
+			  initTimeout.purge();
+		  }
 	  }
 	  
 	  public void stopSendTimeout() {
-		  sendTimeout.cancel();
-		  sendTimeout.purge();
-		  sendTimeout = null;
+		  if(sendTimeout==null) client_app.display("cant stop sendTimeout because its null");
+		  else {
+			  sendTimeout.cancel();
+			  sendTimeout.purge();
+		  }
 		  awaitingResponse = false;
 	  }
 	    
