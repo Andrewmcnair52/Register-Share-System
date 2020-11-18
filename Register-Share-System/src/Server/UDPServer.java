@@ -83,15 +83,15 @@ public class UDPServer extends Thread {											//internal server class
     	    	
     	    case 0:	// a test case, print message to console, and respond with 'message received'
     	    	server_app.display("data recieved from client: "+parseString(inputBuffer,1));	//convert data to string, then send to main for displaying
-    	    	sendString("message recieved", 0, dpReceive.getAddress(), dpReceive.getPort());	//send response
+    	    	//sendString("message recieved", 0, dpReceive.getAddress(), dpReceive.getPort());	//send response
     	    	break;
     	    	
     	    case 1: //registration request
     	    	
     	    	break;
     	    	
-    	    case 20: //client serverSelect ping
-    	    	sendString("pong", 20, dpReceive.getAddress(), dpReceive.getPort());
+    	    case 50: //client serverSelect ping
+    	    	sendString("pong", 50, dpReceive.getAddress(), dpReceive.getPort());
     	    	break;
     	    	
     	    	

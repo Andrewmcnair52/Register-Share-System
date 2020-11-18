@@ -1,5 +1,9 @@
 package client;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 public class client_app {
 	
 	public static int localPort = 6055;				//client port number
@@ -10,8 +14,6 @@ public class client_app {
 	public static String server2IP = "localhost";	//server2 ip address
 	
 	public static SocketListener socket;
-	
-	public static boolean blockSending = true;		//block sending while not initialized, and while waiting for timeouts
 
 	public static void main(String[] args) {
 
@@ -19,7 +21,11 @@ public class client_app {
 		socket = new SocketListener(server1IP, server2IP, server1Port, server2Port, localPort);
 		socket.start();
 		
-		//socket.sendString("hello world", 0, 1);	//send message, with op 0
+		try { System.in.read(); }
+		catch (IOException e) { e.printStackTrace(); }
+		
+		socket.sendString("hello world", 0);
+		
 		
 	}
 	

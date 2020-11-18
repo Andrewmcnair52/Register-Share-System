@@ -26,9 +26,11 @@ public class SocketListener extends Thread {
 	public boolean alreadyChanged = false;
 	
 	public int reqNum = 0;
+	public boolean send_lock = true;		//block sending until initialized
+	boolean awaitingResponse = false;		//only for sendTimeout
 	
-	Timer serverSwitchTimer = new Timer();
-	TimerExec serverSwitchExec = new TimerExec();
+	Timer sendTimeout, initTimeout;
+	
 	
 	public SocketListener(String inServer1IP, String inServer2IP, int inServer1Port, int inServer2Port, int inLocalPort) {
 		
@@ -37,10 +39,6 @@ public class SocketListener extends Thread {
 		localPort = inLocalPort;
 		server1Port = inServer1Port;
 		server2Port = inServer2Port;
-		
-		//declare socket
-		try { socket = new DatagramSocket(localPort); }
-		catch (SocketException e) { e.printStackTrace(); System.out.println("SocketException while declaring datagram socket"); }
 		
 		//set server IP's
 		try {
@@ -54,55 +52,29 @@ public class SocketListener extends Thread {
 	
 	public void run() {
 		
-		//initialize serverSelect(servers must be started before client)
-		//send a ping message to both servers to see which responds
-		outputBuffer = new byte[1];
-		outputBuffer[0] = (byte) 20;	//ping message
-		
-		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server1IP, server1Port);
-		try { socket.send(dpSend); }	//send data
-	    catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
-		
-		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server2IP, server2Port);
-		try { socket.send(dpSend); startTimer(5000); }	//send data
-	    catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
-		
-		client_app.display("awaiting server connection...");
-		resetTimer();
-		startTimer(10000);	//set a 10s timeout
-		
-		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
-		
-		try { 
-			
-			socket.receive(dpReceive);			//await for response
-			resetTimer();						//stop timer on server response
-			
-			//if we're here server has responded, set serverSelect
-			if(dpReceive.getPort()==client_app.server1Port) {
-	    		serverSelect = 1;
-	    		client_app.display("server 1 is serving");
-			} else if(dpReceive.getPort()==client_app.server2Port) {
-	    		serverSelect = 2;
-	    		client_app.display("server 2 is serving");
-			}
-			
-			client_app.blockSending = false;	//allow sending now that we know servers are up and serverSelect is initialized
-		
-		} catch (IOException e) { 
-			System.out.println("socketException while recieving data");
+		//declare socket
+		try { socket = new DatagramSocket(localPort); }
+		catch (SocketException e) {
+			e.printStackTrace();
+			System.out.println("SocketException while declaring datagram socket, closing socketListener"); 
 			return;
 		}
 		
+		runInit();		//server init moved to its own function so it can be reused
     	
 		//loop for receiving/parsing/handling incoming data
     	while(true) {
     		
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     			
-    		System.out.println("\nwaiting to recieve data");
     	    try { socket.receive(dpReceive); }			//wait till data is received
-    	    catch (IOException e) { e.printStackTrace(); System.out.println("socketException while recieving data");}
+    	    catch (IOException e) { System.out.println("socketException while recieving data"); return; }
+    	    
+    	    if(awaitingResponse) {
+    	    	stopSendTimeout();	//stop timer, also resets awaitingResponse
+    	    	send_lock = false;		//allow the user to send messages again
+    	    }
+    	    
     	    
     	    //----------------------------
     	    // client input parser/handler
@@ -112,6 +84,21 @@ public class SocketListener extends Thread {
 	    	
     	    case 0:	// a test case, print message to console
     	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
+    	    	break;
+    	    	
+    	    case 50: //server init
+    	    	stopInitTimeout();						//stop timer on server response
+				
+    			//if we're here server has responded, set serverSelect
+    			if(dpReceive.getPort()==client_app.server1Port) {
+    			    serverSelect = 1;
+    			    client_app.display("server 1 is serving");
+    			} else if(dpReceive.getPort()==client_app.server2Port) {
+    				serverSelect = 2;
+    			    client_app.display("server 2 is serving");
+    			}
+    					
+    			send_lock = false;	//allow sending now that we know servers are up and serverSelect is initialized
     	    	break;
     	    	
     	    default:
@@ -125,7 +112,12 @@ public class SocketListener extends Thread {
 		
 	}
 	
-	public void sendString(String message, int op) {
+	public boolean sendString(String message, int op) {
+		
+		if(send_lock) {
+			client_app.display("cant send message right now");
+			return false;
+		}
 		
 		//convert string to byte array
 		byte[] tmpBuff = message.getBytes();		//get message as a byte array
@@ -139,20 +131,44 @@ public class SocketListener extends Thread {
     		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server1IP, server1Port); 	//create datagram packet
     		try { 
     			socket.send(dpSend); 
-    			resetTimer(); startTimer(5000);
-    			client_app.blockSending=true;	//send data, start timeout timer
-    		}catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
+    			startSendTimeout();
+    			send_lock = true;	//send data, start timeout timer
+    		}catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); return false;}
+    		
+    		return true;
     	
     	} else if(serverSelect==2) {
     		
     		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server2IP, server2Port); 	//create datagram packet 
     		try { 
     			socket.send(dpSend);
-    			startTimer(5000);
-    			client_app.blockSending=true;	//send data, start timeout timer
-    		} catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
+    			startSendTimeout();
+    			send_lock = true;	//send data, start timeout timer
+    		} catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); return false;}
     		
-		} else { System.out.println("message could not be sent, invalid serverSelect value: "+serverSelect); return; }
+    		return true;
+    		
+		} else { System.out.println("message could not be sent, invalid serverSelect value: "+serverSelect); return false; }
+		
+	}
+	
+	public void runInit() {
+		
+		//initialize serverSelect(servers must be started before client)
+		//send a ping message to both servers to see which responds
+		outputBuffer = new byte[1];
+		outputBuffer[0] = (byte) 50;	//ping message
+				
+		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server1IP, server1Port);
+		try { socket.send(dpSend); }	//send data
+		catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
+				
+		dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, server2IP, server2Port);
+		try { socket.send(dpSend); }	//send data
+		catch(IOException e) { e.printStackTrace(); client_app.display("message could not be sent"); }
+				
+		client_app.display("awaiting server connection...");
+		startInitTimeout();
 		
 	}
 	
@@ -188,40 +204,50 @@ public class SocketListener extends Thread {
 	 // Timer Stuff
 	 //==================================================
 	    
-	   class TimerExec extends TimerTask {
+	   class initTimeoutTask extends TimerTask {
 		   public void run() { 
-			   System.out.println("timer triggered, switching servers");
-			   
-			   //if timer times out assume servers have switched and change serverSelect
-			   if(serverSelect==0) {
-				   //both servers were sent a message and neither responded to change serverSelect
-				   //therefore either servers are down or neither are serving
-				   socket.close();
-				  client_app.display("timeout expired, no server is serving");
-			   } else if(serverSelect==1) {
-				   //server 1 has timed out assume server switch
-			   }
-			   
-			   
+			   socket.close();
+			   client_app.display("timeout expired, no server is serving");
 		   }
 	   }
 	   
-	   public void resetTimer() {
-		   
-		   serverSwitchTimer.cancel();
-		   serverSwitchTimer.purge();
-		   serverSwitchTimer = new Timer();
-		   serverSwitchExec = new TimerExec();
+	   class sendTimeoutTask extends TimerTask {
+		   public void run() {
+			   client_app.display("timeout expired, no response from server about last sent message");
+			   client_app.display("reinitializing ...");
+			   awaitingResponse = false;
+			   runInit();
+		   }
 	   }
 	   
-	   public void startTimer(int time) {
+	   
+	   public void startInitTimeout() {
 		   
-		   //schedule(TimerTask task, Date time)
-		   // task: task to run
-		   // time: time to wait before running task in milliseconds
-		   serverSwitchTimer.schedule(serverSwitchExec, time);
+		   if(initTimeout!=null) { initTimeout.cancel(); initTimeout.purge(); }
+		   initTimeout = new Timer();
+		   initTimeout.schedule(new initTimeoutTask(), 5000);	//5s timeout
 	   	
 	   }
+	   
+	  public void startSendTimeout() {
+		  if(sendTimeout!=null) { sendTimeout.cancel(); sendTimeout.purge(); }
+		  sendTimeout = new Timer();
+		  sendTimeout.schedule(new sendTimeoutTask(), 5000);	//5s timeout
+		  awaitingResponse = true;
+	  }
+	  
+	  public void stopInitTimeout() {
+		  initTimeout.cancel();
+		  initTimeout.purge();
+		  initTimeout = null;
+	  }
+	  
+	  public void stopSendTimeout() {
+		  sendTimeout.cancel();
+		  sendTimeout.purge();
+		  sendTimeout = null;
+		  awaitingResponse = false;
+	  }
 	    
 	 //==================================================
 	
