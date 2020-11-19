@@ -1,6 +1,10 @@
 package client;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Vector;
+
+//import Server.Subject;
+
 import java.util.Scanner;
 public class client_app {
 	
@@ -23,6 +27,7 @@ public class client_app {
 		Scanner stg = new Scanner(System.in);
 		boolean stop=false;
 		boolean checked = false;
+		ArrayList<String> subjects;
 		System.out.println("Welcome to client console");
 		while(!stop) {
 			System.out.println("\nPlease select an option from the menu");
@@ -33,6 +38,7 @@ public class client_app {
 	        System.out.println("4\t Update subject of interest");
 	        System.out.println("5\t Publish on a subject of interest");
 	        System.out.println("6\t Stop the client app");
+	        System.out.println("7\t Restart the socket Listener");
 	        System.out.print("> ");
 	        while (!in.hasNextInt()) in.next();
 			int select = in.nextInt();
@@ -71,25 +77,55 @@ public class client_app {
 			System.out.println("\t  Enter the user's name you want to update");
 			String nameUpdate = in.next();
 			System.out.println("\t  Update Ip Address"); 
-			String IpAddressUpdate = in.next();;
+			String IpAddressUpdate = in.next();
 			System.out.println("\t  Update socket number"); 
 			int socketUpdate = in.nextInt();
 			String ur = socket.formatUpdateReq(nameUpdate, IpAddressUpdate, socketUpdate);
 			socket.sendString(ur, 3,1);
 			socket.sendString(ur, 3,2);		
 			   break;
-			case 4: System.out.println("\t  Not completed yet");
-				/*System.out.println("\t  What is the user's name?"); 
+			case 4: 
+				System.out.println("\t  What is the user's name?"); 
 				String userName = in.next();
-				System.out.println("\t  Add a subject of interest"); 
-				String subjectInput = in.next();
+				String yesNo ="n";
+				String subjectInput = "";
+				subjects = new ArrayList<String>();
+				do {
+					System.out.println("\t  Add a subject of interest"); 
+					String sInput = in.next();
+					subjects.add(subjectInput);
+					subjectInput = subjectInput + sInput +"-";
+					
+					System.out.println("\t  Do you want to add more subject? y/n"); 
+					yesNo = in.next();
+				}while(!yesNo.equals("n"));
+				subjectInput = subjectInput +"";
 				String sr = socket.formatSubjectReq(userName, subjectInput);
 				socket.sendString(sr, 4, 1);
 				socket.sendString(sr, 4, 2);
+				System.out.println(subjectInput);
 				break;
-				*/
+				
+			case 5: 
+				System.out.println("\t  Enter the user's name");
+				String namePublish = in.next();
+				System.out.println("\t  Enter the subject name"); 
+				String subjectPublish = in.next();
+				System.out.println("\t  Enter the text to publish"); 
+				String textPublsih = in.next();
+				String publishInput = in.next();
+				String pr = socket.formatPublishReq(namePublish, subjectPublish, publishInput);
+				socket.sendString(pr, 11, 1);
+				socket.sendString(pr,11, 2);
+				break;
 			case 6: System.out.println("Stopping the app");
 				stop = true;
+			   break;
+			case 7: 
+			if(!socket.isAlive()) {	
+				System.out.println("Restarting the socket Listener... ");
+				socket.start();
+			}else {System.out.println("The socket is already listening ");}
 			   break;
 			}
 			

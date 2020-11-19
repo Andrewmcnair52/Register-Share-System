@@ -122,6 +122,11 @@ public String formatSubjectReq(String name, String subject) {
 	String formatted = genRqNum() + "-" + name + "-" + subject;
 	return formatted;	
 }
+public String formatPublishReq(String name, String subject, String text) {
+	
+	String formatted = genRqNum() + "-" + name + "-" + subject +"-" + text;
+	return formatted;	
+}
 	 
 	private String parseString(byte[] data, int start) { 	//function to convert byte array to string
     	

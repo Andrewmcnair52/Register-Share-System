@@ -17,7 +17,9 @@ public class Subject {
 		this.name = name;
 		this.users = new ArrayList<String>();
 	}
-	
+	public void setName(String n) {
+		this.name = n;
+	}
 	public String getName() {
 		return name;
 	}
