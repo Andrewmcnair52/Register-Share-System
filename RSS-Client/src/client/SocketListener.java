@@ -112,7 +112,14 @@ public class SocketListener extends Thread {
     	    	client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Registration denied recieved", inputBuffer);
     	    	break;
+              
+    	    case 6: //receive message
     	    	
+    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	fm.log("Publish Message Received", inputBuffer);
+    	    	break;
+    	    	
+
     	    case 50: //server init
     	    	client_app.display("message received");
     	    	stopInitTimeout();						//stop timer on server response
@@ -135,7 +142,7 @@ public class SocketListener extends Thread {
     	    	if(serverSelect==1) serverSelect = 2;
     	    	else serverSelect = 1;
     	    	break;
-    	    	
+
     	    default:
     	    	client_app.display("invalid operation recieved, initial byte out of range");
     	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
@@ -228,6 +235,15 @@ public class SocketListener extends Thread {
 		
 		
 		
+		
+	}
+	
+	
+	//the name would be replaced if some kind of login was implemented.. 
+	public String formatPublishReq(String name, String subject, String text) {
+		
+		String formatted = genRqNum() + "-" + name + "-" + subject + "-" + text;
+		return formatted;
 		
 	}
 	 
