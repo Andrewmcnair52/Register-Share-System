@@ -1,5 +1,7 @@
 package client;
 
+import java.io.IOException;
+
 public class client_app {
 	
 	public static int localPort = 6055;				//client port number
@@ -16,28 +18,24 @@ public class client_app {
 		//start socket listener thread
 		socket = new SocketListener(server1IP, server2IP, server1Port, server2Port, localPort);
 		socket.start();
-		
-		//socket.sendString("hello world", 0, 1);	//send message, with op 0
+
+    //test send message
+		//socket.sendString("hello world", 0);	//send message, with op 0
 		
 		
 		
 		//tests for reg and dereg
-
-		String rr = socket.formatRegisterReq("test", "localhost", 6055);
-
-		
+		// String rr = socket.formatRegisterReq("test", "localhost", 6055);
 		//send reg to both servers
-		socket.sendString(rr, 1, 1);
+		//socket.sendString(rr, 1, 1);
 		//socket.sendString(rr, 1, 2);
-		
 		//test a deregistration
-		
 		//String dr = socket.formatDeregisterReq("test");
 		//socket.sendString(dr, 2, 1);
 		
-		
-		String mr = socket.formatPublishReq("test", "Books", "Books are so dope!");
-		socket.sendString(mr, 11, 1);
+		//test publish
+		//String mr = socket.formatPublishReq("test", "Books", "Books are so dope!");
+		//socket.sendString(mr, 11, 1);
 		
 	}
 	
