@@ -24,16 +24,17 @@ public class FileManager {
 	File file;
 	File log;
 	
-	FileWriter fw;
 	BufferedWriter bw;
-	PrintWriter pw;
+	
+	ArrayList<String> logList = new ArrayList<>();
 	
 	public FileManager(String fileName) {
 		this.file = new File(fileName);
 		
 		LocalDateTime dt = LocalDateTime.now();
 		DateTimeFormatter format = DateTimeFormatter.ofPattern("dd-MM-yyyy HH-mm-ss");
-		String logName = dt.format(format);
+		//String logName = dt.format(format);
+		String logName = "log";
 		this.log = new File(logName + ".txt");
 		
 		try {
@@ -46,21 +47,19 @@ public class FileManager {
 		
 	}
 	
+	public void printLastLogs(int num) {
+		for (int i = 1; i <= num; i++) {
+			try {
+				System.out.println(logList.get(logList.size() - i));
+			}catch (IndexOutOfBoundsException e) {
+				System.out.println("End of List");
+				return;
+			}
+		}
+	}
 	
-	//need to implement appending to files
-//	public void saveUser(User user) {
-//		
-//		ObjectMapper om = new ObjectMapper();
-//		
-//		try {
-//			om.writeValue(file, user);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
 	
-public void updateUserList(List<User> userList) {
+	public void updateUserList(List<User> userList) {
 		
 		ObjectMapper om = new ObjectMapper();
 		
@@ -104,6 +103,8 @@ public void updateUserList(List<User> userList) {
 	public void log(String message) {
 		//simple log a message user wants
 		
+		logList.add(message);
+		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
 			output.write(message + System.getProperty("line.separator"));
@@ -115,14 +116,14 @@ public void updateUserList(List<User> userList) {
 		
 	}
 	
-	//better log function...
-	
 	public void log(String message, byte[] buffer) {
 		String sMes = new String(Arrays.copyOfRange(buffer, 1, buffer.length));
 		
+		logList.add(java.time.LocalTime.now() + " " + message + " : " + sMes);
+		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
-			output.write(java.time.LocalTime.now() + message + " : " + sMes + System.getProperty("line.separator"));
+			output.write(java.time.LocalTime.now() + " " + message + " : " + sMes + System.getProperty("line.separator"));
 			output.close();
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -131,9 +132,11 @@ public void updateUserList(List<User> userList) {
 	
 	public void log(String message, String sMes) {
 		
+		logList.add(java.time.LocalTime.now() + " " + message + " : " + sMes);
+		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
-			output.write(java.time.LocalTime.now() + message + " : " + sMes + System.getProperty("line.separator"));
+			output.write(java.time.LocalTime.now() + " " + message + " : " + sMes + System.getProperty("line.separator"));
 			output.close();
 		}catch(Exception e) {
 			e.printStackTrace();

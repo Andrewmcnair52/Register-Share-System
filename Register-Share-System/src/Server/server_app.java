@@ -95,6 +95,36 @@ public class server_app {
 			System.out.println("\ninvalid value\n"+e.getMessage()+"\nvalue should be an integer\nexiting ...");
 			
 		}
+		
+		for (;;) {
+			System.out.println("Server Side Menu:");
+			System.out.println("0: show last 20 lines of the log");
+			
+			//char[] menuBuf = new char[1];
+			int menuO =-1;
+			try {
+				menuO = Integer.parseInt(cin.readLine());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			switch (menuO) {
+			case 0:
+				server.fm.printLastLogs(20);
+				break;
+			case -1:
+				//best way to do this ?
+				System.exit(0);
+				return;
+			}
+			
+		}
+		
+//		System.out.println("Please enter the restore file name you want to load/create (or nothing for default)");
+//		System.out.print("> ");
+//		char[] fnbuff = new char[64];
+//		cin.read(fnbuff);
 
 	}
 	

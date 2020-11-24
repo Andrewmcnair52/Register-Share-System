@@ -31,6 +31,8 @@ public class UDPServer extends Thread {											//internal server class
 	public InetAddress otherServerIP;
 	public int otherServerPort;
 	
+	public FileManager fm;
+	
 	DatagramSocket serverSocket;				//server listens on this socket
 	byte[] inputBuffer, outputBuffer;			//network io buffers
 	DatagramPacket dpReceive, dpSend;			//datagram packets
@@ -41,7 +43,6 @@ public class UDPServer extends Thread {											//internal server class
 	
 	ArrayList<User> registeredUsers;
 	ArrayList<Subject> subjects;
-	FileManager fm;
 	
 	
     public UDPServer(int localPort, int restore, String fileName) {
