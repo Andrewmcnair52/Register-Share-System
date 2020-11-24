@@ -21,29 +21,22 @@ import com.fasterxml.jackson.databind.*;
 public class FileManager {
 	//needs to have a file, and methods to add to that file
 	
-	File file;
+	File userListFile;
 	File log;
 	
 	BufferedWriter bw;
 	
 	ArrayList<String> logList = new ArrayList<>();
 	
-	public FileManager(String fileName) {
-		this.file = new File(fileName);
-		
-		LocalDateTime dt = LocalDateTime.now();
-		DateTimeFormatter format = DateTimeFormatter.ofPattern("dd-MM-yyyy HH-mm-ss");
-		//String logName = dt.format(format);
-		String logName = "log";
-		this.log = new File(logName + ".txt");
+	public FileManager(int serverNum) {
+		userListFile = new File("userlist_server"+serverNum+".json");
+		log = new File("log_server"+serverNum+".txt");
 		
 		try {
-			file.createNewFile();
+			if(!userListFile.createNewFile()) loadUserList();
+			else updateUserList(new ArrayList<>());
 			log.createNewFile();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} catch (IOException e) { e.printStackTrace(); }
 		
 	}
 	
@@ -64,7 +57,7 @@ public class FileManager {
 		ObjectMapper om = new ObjectMapper();
 		
 		try {
-			om.writeValue(file, userList);
+			om.writeValue(userListFile, userList);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -84,7 +77,7 @@ public class FileManager {
 	
 		
 		try {
-			sList = Files.readString(file.toPath());
+			sList = Files.readString(userListFile.toPath());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -119,7 +112,7 @@ public class FileManager {
 	public void log(String message, byte[] buffer) {
 		String sMes = new String(Arrays.copyOfRange(buffer, 1, buffer.length));
 		
-		logList.add(java.time.LocalTime.now() + " " + message + " : " + sMes);
+		logList.add("[" + java.time.LocalTime.now() + "] " + message + " : " + sMes);
 		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));

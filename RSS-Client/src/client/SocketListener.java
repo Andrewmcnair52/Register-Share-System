@@ -52,7 +52,7 @@ public class SocketListener extends Thread {
 			else server1IP = InetAddress.getByName(inServer1IP);
 			if(inServer2IP.equals("localhost")) server2IP = InetAddress.getLocalHost();
 			else server2IP = InetAddress.getByName(inServer2IP);
-		} catch (IOException e) { e.printStackTrace(); System.out.println("error while resolving InerAddress");}
+		} catch (IOException e) { e.printStackTrace(); fm.log("error while resolving InerAddress");}
 	
 	}
 	
@@ -62,7 +62,7 @@ public class SocketListener extends Thread {
 		try { socket = new DatagramSocket(localPort); }
 		catch (SocketException e) {
 			e.printStackTrace();
-			System.out.println("SocketException while declaring datagram socket, closing socketListener"); 
+			fm.log("SocketException while declaring datagram socket, closing socketListener"); 
 			return;
 		}
 		
@@ -74,7 +74,7 @@ public class SocketListener extends Thread {
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     			
     	    try { socket.receive(dpReceive); }			//wait till data is received
-    	    catch (IOException e) { System.out.println("stopping SocketListener"); return; }
+    	    catch (IOException e) { fm.log("stopping SocketListener"); return; }
     	    
     	    if(awaitingResponse) {
     	    	stopSendTimeout();	//stop timer, also resets awaitingResponse
@@ -125,10 +125,10 @@ public class SocketListener extends Thread {
     	    	stopInitTimeout();						//stop timer on server response
 				
     			//if we're here server has responded, set serverSelect
-    			if(dpReceive.getPort()==client_app.server1Port) {
+    			if(dpReceive.getPort()==server1Port) {
     			    serverSelect = 1;
     			    client_app.display("server 1 is serving");
-    			} else if(dpReceive.getPort()==client_app.server2Port) {
+    			} else if(dpReceive.getPort()==server2Port) {
     				serverSelect = 2;
     			    client_app.display("server 2 is serving");
     			}
@@ -191,7 +191,7 @@ public class SocketListener extends Thread {
     		
     		return true;
     		
-		} else { System.out.println("message could not be sent, invalid serverSelect value: "+serverSelect); return false; }
+		} else { fm.log("message could not be sent, invalid serverSelect value: "+serverSelect); return false; }
 		
 	}
 	
