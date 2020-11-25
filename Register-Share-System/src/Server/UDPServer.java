@@ -43,7 +43,7 @@ public class UDPServer extends Thread {											//internal server class
 	Random rand = new Random();
 	
 	public FileManager fm;
-	ArrayList<User> registeredUsers;
+	ArrayList<User> registeredUsers = new ArrayList<User>();
 	ArrayList<Subject> subjects = new ArrayList<Subject>();
 	
 	private Semaphore serverSwitchLock = new Semaphore(1);
@@ -440,8 +440,9 @@ public class UDPServer extends Thread {											//internal server class
 			try {
 			   if(tmpUser.getIp().equals("localhost")) {
 				   sendString(message, op, InetAddress.getLocalHost(), tmpUser.getSocket());
-				   fm.log("sending server switch to user at: localhost:"+tmpUser.getSocket());
-			   } else sendString(message, op, InetAddress.getByName(tmpUser.getIp()), tmpUser.getSocket());
+			   } else {
+				   sendString(message, op, InetAddress.getByName(tmpUser.getIp()), tmpUser.getSocket());
+			   }
 			} catch(UnknownHostException e) { 
 				fm.log("unknown host exception while sending to all clients, cannot parse ip: "+tmpUser.getIp());
 			}

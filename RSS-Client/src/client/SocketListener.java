@@ -164,8 +164,6 @@ public class SocketListener extends Thread {
     				server2IP = newServerIP;
     			    server2Port = newServerPort;
     			}
-    	    	System.out.println("server1 info: "+server1IP+":"+server1Port);
-    	    	System.out.println("server1 info: "+server2IP+":"+server2Port);
     	    	break;
 
     	    default:

@@ -119,7 +119,7 @@ public class server_app {
 					server.sendServer("", 51); //request server update
 					synchronized(server) {		//wait for server request to finnish
 						try { 
-							System.out.println("requesting server update"); 
+							System.out.println("\nrequesting server update"); 
 							server.wait();
 			            } catch(InterruptedException e){  e.printStackTrace(); }
 					}

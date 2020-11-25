@@ -41,12 +41,9 @@ public class client_app {
 			return;
 		}
 		
-		display("press enter to send registration request");
-		try { int read = System.in.read(new byte[2]); } catch (IOException e) { e.printStackTrace(); }
-		
 		//test register a user
-		String rr = socket.formatRegisterReq("test", "localhost", 6055);
-		socket.sendString(rr, 1);
+		//String rr = socket.formatRegisterReq("test", "localhost", 2020);
+		//socket.sendString(rr, 1);
 		
 		//test a deregistration
 		//String dr = socket.formatDeregisterReq("test");
