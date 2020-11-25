@@ -31,6 +31,8 @@ public class UDPServer extends Thread {											//internal server class
 	public InetAddress otherServerIP;
 	public int otherServerPort;
 	
+
+	
 	DatagramSocket serverSocket;				//server listens on this socket
 	byte[] inputBuffer, outputBuffer;			//network io buffers
 	DatagramPacket dpReceive, dpSend;			//datagram packets
@@ -39,44 +41,32 @@ public class UDPServer extends Thread {											//internal server class
 	TimerExec serverSwitchExec = new TimerExec();
 	Random rand = new Random();
 	
-	ArrayList<User> registeredUsers;
-	ArrayList<Subject> subjects;
-	FileManager fm;
+	public FileManager fm;
+	ArrayList<User> registeredUsers = new ArrayList<User>();
+	ArrayList<Subject> subjects = new ArrayList<Subject>();
 	
 	
-    public UDPServer(int localPort, int restore, String fileName) {
+    public UDPServer(int localPort, int serverNum) {
+    	
     	inputBuffer = new byte[BUFF_SIZE];
-    	
-    	fm = new FileManager(fileName + ".json");
-    	
-    	registeredUsers = new ArrayList<User>();
-    	subjects = new ArrayList<Subject>();
-    	//if we start a new server... should we attempt to reload the file, ask for it, etc?
-    	
-    	if (restore == 1) {
-    		registeredUsers = fm.loadUserList();
-    	}
+    	fm = new FileManager(serverNum);
     	
     	try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
 		catch (SocketException e) { 
 			e.printStackTrace(); 
-			System.out.println("socketException while creating DatagramSocket");
+			fm.log("socketException while creating DatagramSocket");
 		}
     	
     }
     
     public void run() {
-    	
-    	System.out.println("starting UDP server\n");
-    	
-    	
 		
     	while(true) {	//loop for receiving/parsing/handling incoming data
 	     	
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     		
     	    try { serverSocket.receive(dpReceive); }			//wait till data is received
-    	    catch (IOException e) { e.printStackTrace(); System.out.println("socketException while recieving data");}
+    	    catch (IOException e) { fm.log("socketException while recieving data"); return;}
     	    
     	    //----------------------------
     	    // server input parser/handler
@@ -102,7 +92,7 @@ public class UDPServer extends Thread {											//internal server class
     	    	
     	    case 0:	// a test case, print message to console, and respond with 'message received'
     	    	fm.log("Test Case Received", inputBuffer);
-    	    	server_app.display("data recieved from client: "+parseString(inputBuffer,1));	//convert data to string, then send to main for displaying
+    	    	fm.log("data recieved from client: "+parseString(inputBuffer,1));	//convert data to string, then send to main for displaying
     	    	sendString("message recieved", 0, dpReceive.getAddress(), dpReceive.getPort());	//send response
     	    	break;
     	    	
@@ -276,18 +266,17 @@ public class UDPServer extends Thread {											//internal server class
         	    	dualServerSync = true;	//set server as sync'd
         	    	isServing = true;		//server 1 serves first
 
-        	    	//System.out.println("this server is serving");
         	    	fm.log("Sending sync to other server");
         	    	sendServer("s2",100);	//respond to sync other server
     	    	} else {	//we are server 2
     	    		dualServerSync = true;	//set server as sync'd but do not set isServing
     	    		fm.log("Sending sync confirmation");
-    	    		sendServer("s",101);	//respond with sync confirmation to start server1's timer
+    	    		sendServer("",101);	//respond with sync confirmation to start server1's timer
     	    		serverSwitchTimer = new Timer();		//initialize server 2's timer
         	    	serverSwitchExec = new TimerExec();		//initialize server2's timerTask
     	    	}
-    	    	if(isServing) System.out.println("this server is serving");
-    	    	else System.out.println("this server is not serving\n");
+    	    	if(isServing) fm.log("this server is serving");
+    	    	else fm.log("this server is not serving\n");
     	    	break;
     	    	
     	    case 101: //server sync confirmation
@@ -302,7 +291,7 @@ public class UDPServer extends Thread {											//internal server class
     	    	fm.log("Server Switch Received", inputBuffer);
     	    	//other server has notified us that of a server switch
     	    	isServing = true;	//start serving
-    	    	server_app.display("this server is now serving");
+    	    	fm.log("this server is now serving");
     	    	startTimer();		//start timer for next server switch
     	    	break;
     	    	
@@ -371,7 +360,7 @@ public class UDPServer extends Thread {											//internal server class
     	dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, ip, destPort); 	//create datagram packet 
 
     	try { serverSocket.send(dpSend); }	//send data
-    	catch(IOException e) { e.printStackTrace(); server_app.display("message could not be sent"); }
+    	catch(IOException e) { e.printStackTrace(); fm.log("message could not be sent"); }
     	
 	}
     
@@ -388,7 +377,7 @@ public class UDPServer extends Thread {											//internal server class
     	dpSend = new DatagramPacket(outputBuffer, outputBuffer.length, otherServerIP, otherServerPort); 	//create datagram packet 
 
     	try { serverSocket.send(dpSend); }	//send data
-    	catch(IOException e) { e.printStackTrace(); server_app.display("message could not be sent"); }
+    	catch(IOException e) { e.printStackTrace(); fm.log("message could not be sent"); }
     	
 	}
     
@@ -397,7 +386,7 @@ public class UDPServer extends Thread {											//internal server class
     	dpSend = new DatagramPacket(toSend, toSend.length, otherServerIP, otherServerPort); 	//create datagram packet 
 
     	try { serverSocket.send(dpSend); }	//send data
-    	catch(IOException e) { e.printStackTrace(); server_app.display("message could not be sent"); }
+    	catch(IOException e) { e.printStackTrace(); fm.log("message could not be sent"); }
     }
     
     
@@ -407,8 +396,8 @@ public class UDPServer extends Thread {											//internal server class
     
    class TimerExec extends TimerTask {
 	   public void run() { 
-		   System.out.println("timer triggered, switching servers");
-		   System.out.println("this server is no longer serving serving\n");
+		   fm.log("timer triggered, switching servers");
+		   fm.log("this server is no longer serving serving\n");
 		   
 		   fm.log("Sending server switch notice to other server");
 		   
@@ -423,7 +412,7 @@ public class UDPServer extends Thread {											//internal server class
 			       if(tmpUser.getIp().equals("localhost")) sendString("", 51, InetAddress.getLocalHost(), tmpUser.getSocket());
 			       else sendString("", 51, InetAddress.getByName(tmpUser.getIp()), tmpUser.getSocket());
 			   } catch(UnknownHostException e) { 
-				   server_app.display("cant update client about server switch, cannot parse ip: "+tmpUser.getIp());
+				   fm.log("cant update client about server switch, cannot parse ip: "+tmpUser.getIp());
 			   }
 		   }
 		   isServing = false;	//stop serving
@@ -442,7 +431,7 @@ public class UDPServer extends Thread {											//internal server class
 	   //project description says to "pick a random value say 5m"
 	   int val = 240000 + rand.nextInt(360000); //pick a value between 240,000 and 360,000 (4m-6m)
 	   //int val = 20000 + rand.nextInt(2000);	//20-22 seconds, left here for debugging purposes
-	   System.out.println("server switch in: " + val + "\n");
+	   fm.log("server switch in: " + val + "\n");
    	
 	   //schedule(TimerTask task, Date time)
 	   // task: task to run

@@ -25,10 +25,7 @@ public class ClientFileManager {
 	
 	public ClientFileManager() {
 		
-		LocalDateTime dt = LocalDateTime.now();
-		DateTimeFormatter format = DateTimeFormatter.ofPattern("dd-MM-yyyy HH-mm-ss");
-		String logName = dt.format(format);
-		this.log = new File(logName + ".txt");
+		this.log = new File("clientLog.txt");
 		
 		try {
 			log.createNewFile();
