@@ -88,14 +88,12 @@ public class client_app {
 			int socketInput = in.nextInt();
 			String rr = socket.formatRegisterReq(nameInput, IpAddressInput, socketInput);
 			socket.sendString(rr, 1);
-			socket.sendString(rr, 1);
 				break;
 			case 2: 
 				System.out.println("\t  Enter the name"); 
 				System.out.print("> ");
 				nameInput = in.next();
 				String dr = socket.formatDeregisterReq(nameInput);
-				socket.sendString(dr, 2);
 				socket.sendString(dr, 2);
 				break;
 			case 3: 
@@ -106,7 +104,6 @@ public class client_app {
 			System.out.println("\t  Update socket number"); 
 			int socketUpdate = in.nextInt();
 			String ur = socket.formatUpdateReq(nameUpdate, IpAddressUpdate, socketUpdate);
-			socket.sendString(ur, 3);
 			socket.sendString(ur, 3);		
 			   break;
 			case 4: 
@@ -127,7 +124,6 @@ public class client_app {
 				subjectInput = subjectInput +"";
 				String sr = socket.formatSubjectReq(userName, subjectInput);
 				socket.sendString(sr, 4);
-				socket.sendString(sr, 4);
 				System.out.println(subjectInput);
 				break;
 				
@@ -141,7 +137,6 @@ public class client_app {
 				String publishInput = in.next();
 				String pr = socket.formatPublishReq(namePublish, subjectPublish, publishInput);
 				socket.sendString(pr, 11);
-				socket.sendString(pr,11);
 				break;
 			case 6: System.out.println("Stopping the app");
 				stop = true;
