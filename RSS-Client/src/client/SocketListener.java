@@ -11,6 +11,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Random;
 
+
+
 public class SocketListener extends Thread {
 
 	private int BUFF_SIZE = 1066;	//input buffer size
@@ -24,7 +26,6 @@ public class SocketListener extends Thread {
 	ClientFileManager fm = new ClientFileManager();
 	
 	private Random RNG = new Random(System.currentTimeMillis());
-	
 	public int serverSelect = 0;	//0 means uninitialized
 	public boolean awaitServerSelect = false;
 	public boolean alreadyChanged = false;
@@ -37,15 +38,12 @@ public class SocketListener extends Thread {
 	initTimeoutTask initTask;
 	sendTimeoutTask sendTask;
 	
-	
 	public SocketListener(String inServer1IP, String inServer2IP, int inServer1Port, int inServer2Port, int inLocalPort) {
-		
 		//initialize members
 		inputBuffer = new byte[BUFF_SIZE];
 		localPort = inLocalPort;
 		server1Port = inServer1Port;
 		server2Port = inServer2Port;
-		
 		//set server IP's
 		try {
 			if(inServer1IP.equals("localhost")) server1IP = InetAddress.getLocalHost();
@@ -53,28 +51,26 @@ public class SocketListener extends Thread {
 			if(inServer2IP.equals("localhost")) server2IP = InetAddress.getLocalHost();
 			else server2IP = InetAddress.getByName(inServer2IP);
 		} catch (IOException e) { e.printStackTrace(); fm.log("error while resolving InerAddress");}
-	
 	}
 	
 	public void run() {
-		
 		//declare socket
-		try { socket = new DatagramSocket(localPort); }
-		catch (SocketException e) {
-			e.printStackTrace();
-			fm.log("SocketException while declaring datagram socket, closing socketListener"); 
-			return;
-		}
-		
-		runInit();		//server init moved to its own function so it can be reused
+				try { socket = new DatagramSocket(localPort); }
+				catch (SocketException e) {
+					e.printStackTrace();
+					fm.log("SocketException while declaring datagram socket, closing socketListener"); 
+					return;
+				}
+				
+				runInit();		//server init moved to its own function so it can be reused
     	
-		//loop for receiving/parsing/handling incoming data
-    	while(true) {
+    	while(true) {	//loop for receiving/parsing/handling incoming data
     		
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     			
+    		
     	    try { socket.receive(dpReceive); }			//wait till data is received
-    	    catch (IOException e) { fm.log("stopping SocketListener"); return; }
+    	    catch (IOException e) { fm.log("stopping SocketListener"); return;}
     	    
     	    if(awaitingResponse) {
     	    	stopSendTimeout();	//stop timer, also resets awaitingResponse
@@ -95,31 +91,33 @@ public class SocketListener extends Thread {
     	     * 51: server switch notification
     	     * 
     	     */
-
+    	    
+    	    
     	    switch(inputBuffer[0]) {
 	    	
     	    case 0:	// a test case, print message to console
-    	    	client_app.display("data recieved, from server" + parseString(inputBuffer, 1));
+
+    	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
     	    	fm.log("Test case received", inputBuffer);
     	    	break;
     	    	
-			case 4:
+    	    case 4:
+    	    	
     	    	client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Registration accepted recieved", inputBuffer);
     	    	break;
     	    	
     	    case 5:
+    	    	
     	    	client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Registration denied recieved", inputBuffer);
     	    	break;
-              
     	    case 6: //receive message
     	    	
     	    	client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Publish Message Received", inputBuffer);
     	    	break;
     	    	
-
     	    case 50: //server init
     	    	client_app.display("message received");
     	    	stopInitTimeout();						//stop timer on server response
@@ -142,7 +140,6 @@ public class SocketListener extends Thread {
     	    	if(serverSelect==1) serverSelect = 2;
     	    	else serverSelect = 1;
     	    	break;
-
     	    default:
     	    	client_app.display("invalid operation recieved, initial byte out of range");
     	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
@@ -155,7 +152,7 @@ public class SocketListener extends Thread {
 		
 	}
 	
-	public boolean sendString(String message, int op) {
+public boolean sendString(String message, int op) {
 		
 		if(send_lock) {
 			client_app.display("cant send message right now");
@@ -228,24 +225,23 @@ public class SocketListener extends Thread {
 	public String formatRegisterReq(String name, String ip, int port) {
 		
 		String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
-		return formatted;
-		
-		
-		//sendString(registerReq, 0, 1);
-		
-		
-		
-		
+		return formatted;	
 	}
-	
-	
-	//the name would be replaced if some kind of login was implemented.. 
-	public String formatPublishReq(String name, String subject, String text) {
+public String formatUpdateReq(String name, String ip, int port) {
 		
-		String formatted = genRqNum() + "-" + name + "-" + subject + "-" + text;
-		return formatted;
-		
+		String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
+		return formatted;	
 	}
+public String formatSubjectReq(String name, String subject) {
+	
+	String formatted = genRqNum() + "-" + name + "-" + subject;
+	return formatted;	
+}
+public String formatPublishReq(String name, String subject, String text) {
+	
+	String formatted = genRqNum() + "-" + name + "-" + subject +"-" + text;
+	return formatted;	
+}
 	 
 	private String parseString(byte[] data, int start) { 	//function to convert byte array to string
     	
@@ -281,62 +277,62 @@ public class SocketListener extends Thread {
                 ((bytes[2] & 0xFF) << 8 ) | 
                 ((bytes[3] & 0xFF) << 0 );
     }
-	
-	//==================================================
-	 // Timer Stuff
-	 //==================================================
-	    
-	   class initTimeoutTask extends TimerTask {
-		   public void run() { 
-			   socket.close();
-			   client_app.display("timeout expired, no server is serving");
-		   }
-	   }
-	   
-	   class sendTimeoutTask extends TimerTask {
-		   public void run() {
-			   client_app.display("timeout expired, no response from server about last sent message");
-			   awaitingResponse = false;
-			   runInit();
-		   }
-	   }
-	   
-	   
-	   public void startInitTimeout() {
-		   
-		   if(initTimeout!=null) { initTimeout.cancel(); initTimeout.purge(); }
-		   initTimeout = new Timer();
-		   initTask = new initTimeoutTask();
-		   initTimeout.schedule(initTask, 5000);	//5s timeout
-	   	
-	   }
-	   
-	  public void startSendTimeout() {
-		  if(sendTimeout!=null) { sendTimeout.cancel(); sendTimeout.purge(); }
-		  sendTimeout = new Timer();
-		  sendTask = new sendTimeoutTask();
-		  sendTimeout.schedule(sendTask, 5000);	//5s timeout
-		  awaitingResponse = true;
-	  }
-	  
-	  public void stopInitTimeout() {
-		  if(initTimeout==null) client_app.display("cant stop initTimeout because its null");
-		  else {
-			  initTimeout.cancel();
-			  initTimeout.purge();
-		  }
-	  }
-	  
-	  public void stopSendTimeout() {
-		  if(sendTimeout==null) client_app.display("cant stop sendTimeout because its null");
-		  else {
-			  sendTimeout.cancel();
-			  sendTimeout.purge();
-		  }
-		  awaitingResponse = false;
-	  }
-	    
-	 //==================================================
-	
+  //==================================================
+  	 // Timer Stuff
+  	 //==================================================
+  	    
+  	   class initTimeoutTask extends TimerTask {
+  		   public void run() { 
+  			   socket.close();
+  			   client_app.display("timeout expired, no server is serving");
+  		   }
+  	   }
+  	   
+  	   class sendTimeoutTask extends TimerTask {
+  		   public void run() {
+  			   client_app.display("timeout expired, no response from server about last sent message");
+  			   awaitingResponse = false;
+  			   runInit();
+  		   }
+  	   }
+  	   
+  	   
+  	   public void startInitTimeout() {
+  		   
+  		   if(initTimeout!=null) { initTimeout.cancel(); initTimeout.purge(); }
+  		   initTimeout = new Timer();
+  		   initTask = new initTimeoutTask();
+  		   initTimeout.schedule(initTask, 5000);	//5s timeout
+  	   	
+  	   }
+  	   
+  	  public void startSendTimeout() {
+  		  if(sendTimeout!=null) { sendTimeout.cancel(); sendTimeout.purge(); }
+  		  sendTimeout = new Timer();
+  		  sendTask = new sendTimeoutTask();
+  		  sendTimeout.schedule(sendTask, 5000);	//5s timeout
+  		  awaitingResponse = true;
+  	  }
+  	  
+  	  public void stopInitTimeout() {
+  		  if(initTimeout==null) client_app.display("cant stop initTimeout because its null");
+  		  else {
+  			  initTimeout.cancel();
+  			  initTimeout.purge();
+  		  }
+  	  }
+  	  
+  	  public void stopSendTimeout() {
+  		  if(sendTimeout==null) client_app.display("cant stop sendTimeout because its null");
+  		  else {
+  			  sendTimeout.cancel();
+  			  sendTimeout.purge();
+  		  }
+  		  awaitingResponse = false;
+  	  }
+  	    
+  	 //==================================================
+  	
+  	
 	
 }

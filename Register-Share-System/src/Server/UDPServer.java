@@ -31,8 +31,6 @@ public class UDPServer extends Thread {											//internal server class
 	public InetAddress otherServerIP;
 	public int otherServerPort;
 	
-
-	
 	DatagramSocket serverSocket;				//server listens on this socket
 	byte[] inputBuffer, outputBuffer;			//network io buffers
 	DatagramPacket dpReceive, dpSend;			//datagram packets
@@ -41,15 +39,20 @@ public class UDPServer extends Thread {											//internal server class
 	TimerExec serverSwitchExec = new TimerExec();
 	Random rand = new Random();
 	
+	
 	public FileManager fm;
+	
 	ArrayList<User> registeredUsers = new ArrayList<User>();
-	ArrayList<Subject> subjects = new ArrayList<Subject>();
+    ArrayList<String> listOfSubjects;
+    ArrayList<String> interestedUsers = new ArrayList<String>();
+    ArrayList<Subject> subjects = new ArrayList<Subject>();
 	
 	
     public UDPServer(int localPort, int serverNum) {
-    	
     	inputBuffer = new byte[BUFF_SIZE];
+    	
     	fm = new FileManager(serverNum);
+    	
     	
     	try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
 		catch (SocketException e) { 
@@ -60,13 +63,16 @@ public class UDPServer extends Thread {											//internal server class
     }
     
     public void run() {
-		
+    	
+    	
     	while(true) {	//loop for receiving/parsing/handling incoming data
 	     	
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     		
     	    try { serverSocket.receive(dpReceive); }			//wait till data is received
-    	    catch (IOException e) { fm.log("socketException while recieving data"); return;}
+    	    catch (IOException e) { fm.log("socketException while recieving data");}
+    	    
+    	    
     	    
     	    //----------------------------
     	    // server input parser/handler
@@ -75,8 +81,10 @@ public class UDPServer extends Thread {											//internal server class
     	    /*	0: test case
     	     * 	1: registration request
     	     *  2: deregister
+    	     *  3: update ip and socket
+    	     *  4: update subjects of interest
     	     *  11: publish
-           * 	20: client serverSelect ping
+    	     *  20 client serverSelectPing
     	     * 	100: server sync
     	     * 	101: server sync confirmation
     	     * 	102: server switch
@@ -98,7 +106,6 @@ public class UDPServer extends Thread {											//internal server class
     	    	
     	    case 1: //registration request
     	    	fm.log("Register Received", inputBuffer);
-    	    	
     	    	String regReq = parseString(inputBuffer, 1);
     	    	
     	    	String[] reqSplit = regReq.split("-");
@@ -111,11 +118,13 @@ public class UDPServer extends Thread {											//internal server class
     	    	if (regStatus == 0) {
     	    		
     	    		registeredUsers.add(newUser);
+    	    		
     	    		//and save them to the file
     	    		
     	    		fm.updateUserList(registeredUsers);
+    	    		//subjectsFile.updateSubjects(subjects);
     	    		
-    	    		//if you're the serving server send other server message and then they should do the save as well. 
+    	    		//if youre the serving server send other server message and then they should do the save as well. 
     	    		byte[] copiedRegister = Arrays.copyOf(inputBuffer, 56);
     	    		copiedRegister[0] = 103;
     	    		fm.log("Sending Registration Notice", copiedRegister);
@@ -138,7 +147,6 @@ public class UDPServer extends Thread {											//internal server class
     	    	
     	    case 2: //unregister
     	    	fm.log("Unregister Received", inputBuffer);
-    	    	
     	    	//get rid of op code and the single - that follows
     	    	String deregUserReq = parseString(inputBuffer, 1);
     	    	
@@ -162,8 +170,58 @@ public class UDPServer extends Thread {											//internal server class
     	    		}
     	    	}
     	    	break;
+    	    case 3:
+    	    	boolean found = false;
+    	    	String updateUserReq = parseString(inputBuffer, 1);
+    	    	String[] splitUpdateReq = updateUserReq.split("-");
+    	    	for (int i = 0; i < registeredUsers.size(); i++) {
+    	    		if(registeredUsers.get(i).getName().equals(splitUpdateReq[1])) {
+    	    			registeredUsers.get(i).setIp(splitUpdateReq[2]);
+    	    			registeredUsers.get(i).setSocket(Integer.parseInt(splitUpdateReq[3]));
+    	    			sendString("RQ#: " + splitUpdateReq[0] + ": "+"Update confirmed ", 0, dpReceive.getAddress(), dpReceive.getPort());
+    	    			fm.updateUserList(registeredUsers); //update file
+    	    			found = true;
+    	    			break;
+    	    		 }
+    	    		}
+	    		if (!found) {
+	    			sendString("RQ#: " + splitUpdateReq[0] + ": "+"The user does not exist ", 0, dpReceive.getAddress(), dpReceive.getPort());
+	    		}
+    	    	break;
     	    	
-    	    case 11: //publish
+    	    case 4:
+    	    	boolean found4=false;
+    	    	listOfSubjects = new ArrayList<String>();
+    	    	String updateSubjectReq = parseString(inputBuffer, 1);
+    	    	String[] splitSubjectReq = updateSubjectReq.split("-");
+    	    	//checks if the user name exists in the list of registered users
+    	    	for (int i = 0; i < registeredUsers.size(); i++) {
+    	    		if(registeredUsers.get(i).getName().equals(splitSubjectReq[1])) {
+    	    		found4 = true;
+    	    		break;}
+    	    	}
+    	    	// adding the list of objects given from the user
+    	    	for (int i = 2; i<splitSubjectReq.length;i++) {
+    	    		listOfSubjects.add(splitSubjectReq[i]);
+    	    		}
+    	    	 
+    	    	if (found4) {
+    	    		// add the subject + the list of users to the list of subjects 
+    	    		interestedUsers.add(splitSubjectReq[1]); // add user name
+    	    		// This is just a test: The following will add the first subject to the list of subject.
+    	    		// Have to work on it later on.
+    	    		Subject s = new Subject(listOfSubjects.get(0),interestedUsers); // subject, list of users interested in this subject
+        	    	subjects.add(s);
+        	    	sendString("Subject Updated  RQ#: " + splitSubjectReq[0] + "  Name: " + splitSubjectReq[1] + "  List Of Subjects: "+ listOfSubjects, 0, dpReceive.getAddress(), dpReceive.getPort());
+        	    	// need to update the list of subject file
+    	    	}
+    	    	else {
+    	    		sendString("Subject Rejected RQ#: " + splitSubjectReq[0] + "  Name: " + splitSubjectReq[1] + "  List Of Subjects: "+ listOfSubjects, 0, dpReceive.getAddress(), dpReceive.getPort());
+    	    		
+    	    	}
+    	    	break;
+    	    	
+    	    	case 11: //publish
     	    	
     	    	fm.log("Publish Request Received", inputBuffer);
     	    	
@@ -242,13 +300,13 @@ public class UDPServer extends Thread {											//internal server class
     	    	//if not send back DENIED! - rq - reason
     	    	
     	    	break;
-              
-            case 50: //client serverSelect ping
-    	    	    sendString("pong", 50, dpReceive.getAddress(), dpReceive.getPort());
-    	    	    break;
     	    	
-            default:
-              break;
+    	    	case 50: //client serverSelect ping
+    	    		sendString("pong", 50, dpReceive.getAddress(), dpReceive.getPort());
+    	    		break;
+    	    			          
+    	    	default:
+    	    		break;
     	    	
     	    	
     	    }
@@ -261,11 +319,11 @@ public class UDPServer extends Thread {											//internal server class
     	    	//save info for other server
     	    	otherServerIP = dpReceive.getAddress();
     	    	otherServerPort = dpReceive.getPort();
+
     	    	
     	    	if(Objects.equals(parseString(inputBuffer,1),"s1")) {	//we are server 1
         	    	dualServerSync = true;	//set server as sync'd
         	    	isServing = true;		//server 1 serves first
-
         	    	fm.log("Sending sync to other server");
         	    	sendServer("s2",100);	//respond to sync other server
     	    	} else {	//we are server 2
@@ -275,13 +333,16 @@ public class UDPServer extends Thread {											//internal server class
     	    		serverSwitchTimer = new Timer();		//initialize server 2's timer
         	    	serverSwitchExec = new TimerExec();		//initialize server2's timerTask
     	    	}
-    	    	if(isServing) fm.log("this server is serving");
-    	    	else fm.log("this server is not serving\n");
+    	    	if(isServing) {
+    	    		fm.log("This server is serving\n");
+    	    	}
+    	    	else {
+    	    		fm.log("This server is not serving\n");
+    	    	}
     	    	break;
     	    	
     	    case 101: //server sync confirmation
     	    	fm.log("Server Sync Confirmation Received", inputBuffer);
-    	    	
     	    	//if we're here, then both servers are now sync'd and this is server 1
     	    	//start serverSwitchTimer
     	    	startTimer();
@@ -328,6 +389,8 @@ public class UDPServer extends Thread {											//internal server class
     	    
     	    
     	    
+    	    
+    	    
     	    inputBuffer = new byte[BUFF_SIZE]; 	// Clear the buffer after every message. 
 
 	    }
@@ -335,6 +398,7 @@ public class UDPServer extends Thread {											//internal server class
 	}
     
     String parseString(byte[] data, int start) { 	//function to convert byte array to string
+    	
     	
         if (data == null) return null; 
         String out = new String(); 
@@ -397,24 +461,23 @@ public class UDPServer extends Thread {											//internal server class
    class TimerExec extends TimerTask {
 	   public void run() { 
 		   fm.log("timer triggered, switching servers");
-		   fm.log("this server is no longer serving serving\n");
 		   
-		   fm.log("Sending server switch notice to other server");
+		  fm.log("This server is no longer serving\n");
+		  fm.log("Sending server switch notice to other server");
+		//notify other server first
+		  sendServer("",102);
 		   
-			//notify other server first
-		   sendServer("",102);
-		   
-		 //notify registered users of server switch
-		   Iterator<User> it = registeredUsers.iterator();
-		   while(it.hasNext()) { 
-			   User tmpUser = it.next();
-			   try {
-			       if(tmpUser.getIp().equals("localhost")) sendString("", 51, InetAddress.getLocalHost(), tmpUser.getSocket());
-			       else sendString("", 51, InetAddress.getByName(tmpUser.getIp()), tmpUser.getSocket());
-			   } catch(UnknownHostException e) { 
-				   fm.log("cant update client about server switch, cannot parse ip: "+tmpUser.getIp());
+			 //notify registered users of server switch
+			   Iterator<User> it = registeredUsers.iterator();
+			   while(it.hasNext()) { 
+				   User tmpUser = it.next();
+				   try {
+				       if(tmpUser.getIp().equals("localhost")) sendString("", 51, InetAddress.getLocalHost(), tmpUser.getSocket());
+				       else sendString("", 51, InetAddress.getByName(tmpUser.getIp()), tmpUser.getSocket());
+				   } catch(UnknownHostException e) { 
+					   fm.log("can't update client about server switch, cannot parse ip: "+tmpUser.getIp());
+				   }
 			   }
-		   }
 		   isServing = false;	//stop serving
 		   
 	   }
@@ -431,6 +494,7 @@ public class UDPServer extends Thread {											//internal server class
 	   //project description says to "pick a random value say 5m"
 	   int val = 240000 + rand.nextInt(360000); //pick a value between 240,000 and 360,000 (4m-6m)
 	   //int val = 20000 + rand.nextInt(2000);	//20-22 seconds, left here for debugging purposes
+	   
 	   fm.log("server switch in: " + val + "\n");
    	
 	   //schedule(TimerTask task, Date time)
@@ -439,8 +503,19 @@ public class UDPServer extends Thread {											//internal server class
 	   serverSwitchTimer.schedule(serverSwitchExec, val);
    	
    }
+   public String displayTime(int v) {
+	   int s = v/1000;
+	   int seconds = s%60;
+	   int h = s/60;
+	   int minutes = h%60;
+	   int hours = h/60;	
+	   
+	   return (hours+"h"+minutes+"m"+seconds+"s");
+   }
     
  //==================================================
+    
+
    
    
     private int checkUser(User user) {
@@ -457,6 +532,7 @@ public class UDPServer extends Thread {											//internal server class
 		
 		return 0; //no registered user
     }
+    
 	   
 	      
 }

@@ -60,8 +60,5 @@ public class ClientFileManager {
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
-	}
-		
+	}	
 }
-	
-	
