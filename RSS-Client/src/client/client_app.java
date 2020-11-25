@@ -1,4 +1,7 @@
 package client;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -8,20 +11,43 @@ import java.util.Vector;
 import java.util.Scanner;
 public class client_app {
 	
-	public static int localPort = 6055;				//client port number
-	
-	public static int server1Port = 6077;			//server1 port number
-	public static int server2Port = 6066;			//server2 port number
-	public static String server1IP = "localhost";	//server1 ip address
-	public static String server2IP = "localhost";	//server2 ip address
+
 	
 	public static SocketListener socket;
 
 	public static void main(String[] args) {
 
-		//start socket listener thread
-		socket = new SocketListener(server1IP, server2IP, server1Port, server2Port, localPort);
-		socket.start();
+BufferedReader cin = new BufferedReader(new InputStreamReader(System.in));  
+		
+		try {
+		
+			System.out.print("local port: ");
+			int localPort = Integer.parseInt( cin.readLine() );
+			
+			System.out.print("enter <IP>:<Port> of server1: ");
+			String inServer1 = cin.readLine();
+			int server1Port = Integer.parseInt( inServer1.substring(inServer1.indexOf(':')+1) );
+			String server1IP = inServer1.substring(0,inServer1.indexOf(':'));
+			
+			System.out.print("enter <IP>:<Port> of server2: ");
+			String inServer2 = cin.readLine();
+			int server2Port = Integer.parseInt( inServer2.substring(inServer2.indexOf(':')+1) );
+			String server2IP = inServer2.substring(0,inServer2.indexOf(':'));
+			
+			//start socket listener thread
+			socket = new SocketListener(server1IP, server2IP, server1Port, server2Port, localPort);
+			socket.start();
+
+		} catch (IOException e) {
+			System.out.println("An IOException was thrown during console input");
+			e.printStackTrace();
+			System.out.println("exiting");
+			return;
+		} catch (NumberFormatException e) {
+			System.out.println("\ninvalid value\n"+e.getMessage()+"\nvalue should be an integer\nexiting ...");
+			return;
+		}
+
 		
 		Scanner in = new Scanner(System.in);
 		Scanner stg = new Scanner(System.in);
@@ -49,7 +75,7 @@ public class client_app {
 					Scanner scan = new Scanner(System.in);
 					test+=scan.nextLine();
 			        //scan.close();
-					socket.sendString(test, 0,1);
+					socket.sendString(test, 0);
 				break;
 			case 1: 
 			System.out.println("\t  Enter the name");
@@ -62,16 +88,16 @@ public class client_app {
 			System.out.print("> ");
 			int socketInput = in.nextInt();
 			String rr = socket.formatRegisterReq(nameInput, IpAddressInput, socketInput);
-			socket.sendString(rr, 1, 1);
-			socket.sendString(rr, 1, 2);
+			socket.sendString(rr, 1);
+			socket.sendString(rr, 1);
 				break;
 			case 2: 
 				System.out.println("\t  Enter the name"); 
 				System.out.print("> ");
 				nameInput = in.next();
 				String dr = socket.formatDeregisterReq(nameInput);
-				socket.sendString(dr, 2, 1);
-				socket.sendString(dr, 2, 2);
+				socket.sendString(dr, 2);
+				socket.sendString(dr, 2);
 				break;
 			case 3: 
 			System.out.println("\t  Enter the user's name you want to update");
@@ -81,8 +107,8 @@ public class client_app {
 			System.out.println("\t  Update socket number"); 
 			int socketUpdate = in.nextInt();
 			String ur = socket.formatUpdateReq(nameUpdate, IpAddressUpdate, socketUpdate);
-			socket.sendString(ur, 3,1);
-			socket.sendString(ur, 3,2);		
+			socket.sendString(ur, 3);
+			socket.sendString(ur, 3);		
 			   break;
 			case 4: 
 				System.out.println("\t  What is the user's name?"); 
@@ -101,8 +127,8 @@ public class client_app {
 				}while(!yesNo.equals("n"));
 				subjectInput = subjectInput +"";
 				String sr = socket.formatSubjectReq(userName, subjectInput);
-				socket.sendString(sr, 4, 1);
-				socket.sendString(sr, 4, 2);
+				socket.sendString(sr, 4);
+				socket.sendString(sr, 4);
 				System.out.println(subjectInput);
 				break;
 				
@@ -115,8 +141,8 @@ public class client_app {
 				String textPublsih = in.next();
 				String publishInput = in.next();
 				String pr = socket.formatPublishReq(namePublish, subjectPublish, publishInput);
-				socket.sendString(pr, 11, 1);
-				socket.sendString(pr,11, 2);
+				socket.sendString(pr, 11);
+				socket.sendString(pr,11);
 				break;
 			case 6: System.out.println("Stopping the app");
 				stop = true;
@@ -132,7 +158,7 @@ public class client_app {
 			
 		}
 	        
-		socket.sendString("hello world", 1, 1);
+		socket.sendString("hello world", 1);
 		
 		
 		//tests for reg and dereg
@@ -140,8 +166,8 @@ public class client_app {
 		String rr = socket.formatRegisterReq("test", "localhost", 8989);
 		
 		//send reg to both servers
-		socket.sendString(rr, 1, 1);
-		socket.sendString(rr, 1, 2);
+		socket.sendString(rr, 1);
+		socket.sendString(rr, 1);
 		
 		//test a deregistration
 		//String dr = socket.formatDeregisterReq("test");

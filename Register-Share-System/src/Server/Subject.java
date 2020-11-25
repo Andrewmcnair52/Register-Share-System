@@ -7,7 +7,6 @@ public class Subject {
 	String name;
 	ArrayList<String> users;
 	
-	
 	public Subject(String name, ArrayList<String> users) {
 		this.name = name;
 		this.users = users;
@@ -17,9 +16,7 @@ public class Subject {
 		this.name = name;
 		this.users = new ArrayList<String>();
 	}
-	public void setName(String n) {
-		this.name = n;
-	}
+	
 	public String getName() {
 		return name;
 	}

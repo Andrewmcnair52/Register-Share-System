@@ -21,68 +21,49 @@ import com.fasterxml.jackson.databind.*;
 public class FileManager {
 	//needs to have a file, and methods to add to that file
 	
-	File file;
+	File userListFile;
 	File log;
 	
-	FileWriter fw;
 	BufferedWriter bw;
-	PrintWriter pw;
 	
-	public FileManager(String fileName) {
-		this.file = new File(fileName);
-		
-		LocalDateTime dt = LocalDateTime.now();
-		DateTimeFormatter format = DateTimeFormatter.ofPattern("dd-MM-yyyy HH-mm-ss");
-		String logName = dt.format(format);
-		this.log = new File(logName + ".txt");
+	ArrayList<String> logList = new ArrayList<>();
+	
+	public FileManager(int serverNum) {
+		userListFile = new File("userlist_server"+serverNum+".json");
+		log = new File("log_server"+serverNum+".txt");
 		
 		try {
-			file.createNewFile();
+			if(!userListFile.createNewFile()) loadUserList();
+			else updateUserList(new ArrayList<>());
 			log.createNewFile();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (IOException e) { e.printStackTrace(); }
+		
+	}
+	
+	public void printLastLogs(int num) {
+		for (int i = 1; i <= num; i++) {
+			try {
+				System.out.println(logList.get(logList.size() - i));
+			}catch (IndexOutOfBoundsException e) {
+				System.out.println("End of List");
+				return;
+			}
 		}
 	}
 	
 	
-	//need to implement appending to files
-//	public void saveUser(User user) {
-//		
-//		ObjectMapper om = new ObjectMapper();
-//		
-//		try {
-//			om.writeValue(file, user);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
-	
-public void updateUserList(List<User> userList) {
+	public void updateUserList(List<User> userList) {
 		
 		ObjectMapper om = new ObjectMapper();
 		
 		try {
-			om.writeValue(file, userList);
+			om.writeValue(userListFile, userList);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-public void updateSubjects(List<Subject> subjectsList) {
-	
-	ObjectMapper om = new ObjectMapper();
-	
-	try {
-		om.writeValue(file, subjectsList);
-		
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-}
 	
 	//public void deleteUser(String name) {}
 
@@ -96,7 +77,7 @@ public void updateSubjects(List<Subject> subjectsList) {
 	
 		
 		try {
-			sList = Files.readString(file.toPath());
+			sList = Files.readString(userListFile.toPath());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -111,7 +92,12 @@ public void updateSubjects(List<Subject> subjectsList) {
 		
 		return list;
 	}
+	
 	public void log(String message) {
+		//simple log a message user wants
+		
+		logList.add(message);
+		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
 			output.write(message + System.getProperty("line.separator"));
@@ -120,47 +106,33 @@ public void updateSubjects(List<Subject> subjectsList) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 	}
+	
 	public void log(String message, byte[] buffer) {
 		String sMes = new String(Arrays.copyOfRange(buffer, 1, buffer.length));
 		
+		logList.add("[" + java.time.LocalTime.now() + "] " + message + " : " + sMes);
+		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
-			output.write(java.time.LocalTime.now() + message + ": " + sMes + System.getProperty("line.separator"));
+			output.write(java.time.LocalTime.now() + " " + message + " : " + sMes + System.getProperty("line.separator"));
 			output.close();
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public ArrayList<Subject> loadSubjectsList(){
-		ObjectMapper om = new ObjectMapper();
-		ArrayList<Subject> subjectList = new ArrayList<>();
-		String sList = new String();
-		try {
-			sList = Files.readString(file.toPath());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void log(String message, String sMes) {
 		
-		try {
-			subjectList = om.readValue(sList, new TypeReference<ArrayList<Subject>>() {});
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return subjectList;
-	}
-public void log(String message, String sMes) {
+		logList.add(java.time.LocalTime.now() + " " + message + " : " + sMes);
 		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
-			output.write(java.time.LocalTime.now() + message + " : " + sMes + System.getProperty("line.separator"));
+			output.write(java.time.LocalTime.now() + " " + message + " : " + sMes + System.getProperty("line.separator"));
 			output.close();
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
-		
 }
