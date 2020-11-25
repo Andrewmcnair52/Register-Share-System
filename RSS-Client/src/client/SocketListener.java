@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+
 import java.util.Random;
 
 public class SocketListener extends Thread {
@@ -93,7 +94,7 @@ public class SocketListener extends Thread {
     	     * 
     	     * 50: server init
     	     * 51: server switch notification
-    	     * 
+    	     * 52: server update notification
     	     */
 
     	    switch(inputBuffer[0]) {
@@ -141,6 +142,30 @@ public class SocketListener extends Thread {
     	    	client_app.display("received notification of server switch\n");
     	    	if(serverSelect==1) serverSelect = 2;
     	    	else serverSelect = 1;
+    	    	break;
+    	    	
+    	    case 52: //server update notification
+    	    	
+    	    	//parse ip and port
+    	    	String data = parseString(inputBuffer, 1);
+    	    	int newServerPort = Integer.parseInt( data.substring(data.indexOf(':')+1) );
+				String strIP = data.substring(0,data.indexOf(':'));
+				InetAddress newServerIP;
+				try {
+					if(Objects.equals(strIP, "localhost")) newServerIP = InetAddress.getLocalHost();
+					else newServerIP = InetAddress.getByName(strIP);
+				} catch(UnknownHostException e) { fm.log("cant resolve new host ip"); break;}
+				
+    	    	//set ip and port
+    	    	if(dpReceive.getPort()==server1Port) {
+    			    server1IP = newServerIP;
+    			    server1Port = newServerPort;
+    			} else if(dpReceive.getPort()==server2Port) {
+    				server2IP = newServerIP;
+    			    server2Port = newServerPort;
+    			}
+    	    	System.out.println("server1 info: "+server1IP+":"+server1Port);
+    	    	System.out.println("server1 info: "+server2IP+":"+server2Port);
     	    	break;
 
     	    default:
@@ -260,27 +285,6 @@ public class SocketListener extends Thread {
 	private int genRqNum() {
 		return RNG.nextInt(128);
 	}
-	
-	//used to pack big ints into bytes, was used before but could still come in handy
-	private byte[] packIntInBytes(int i)
-	{
-	  byte[] result = new byte[4];
-
-	  result[0] = (byte) (i >> 24);
-	  result[1] = (byte) (i >> 16);
-	  result[2] = (byte) (i >> 8);
-	  result[3] = (byte) (i);
-
-	  return result;
-	}
-	
-	// get an int back from bytes
-    private int fromByteArray(byte[] bytes) {
-         return ((bytes[0] & 0xFF) << 24) | 
-                ((bytes[1] & 0xFF) << 16) | 
-                ((bytes[2] & 0xFF) << 8 ) | 
-                ((bytes[3] & 0xFF) << 0 );
-    }
 	
 	//==================================================
 	 // Timer Stuff
