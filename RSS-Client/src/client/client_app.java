@@ -121,7 +121,6 @@ public class client_app {
 					System.out.println("\t  Do you want to add more subject? y/n"); 
 					yesNo = in.next();
 				}while(!yesNo.equals("n"));
-				subjectInput = subjectInput +"";
 				String sr = socket.formatSubjectReq(userName, subjectInput);
 				socket.sendString(sr, 4);
 				System.out.println(subjectInput);

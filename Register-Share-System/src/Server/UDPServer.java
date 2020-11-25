@@ -43,8 +43,7 @@ public class UDPServer extends Thread {											//internal server class
 	public FileManager fm;
 	
 	ArrayList<User> registeredUsers = new ArrayList<User>();
-    ArrayList<String> listOfSubjects;
-    ArrayList<String> interestedUsers = new ArrayList<String>();
+    //ArrayList<String> interestedUsers = new ArrayList<String>();
     ArrayList<Subject> subjects = new ArrayList<Subject>();
 	
 	
@@ -90,6 +89,7 @@ public class UDPServer extends Thread {											//internal server class
     	     * 	102: server switch
     	     *  103: registration on other server
     	     *  104: dereg on other server
+    	     *  105: update subjects on other server
     	     */
     	    
     	    //note: we cast the op codes to bytes when we send them, meaning we can only use op codes in the range of [-128, 127]
@@ -189,36 +189,27 @@ public class UDPServer extends Thread {											//internal server class
 	    		}
     	    	break;
     	    	
-    	    case 4:
-    	    	boolean found4=false;
-    	    	listOfSubjects = new ArrayList<String>();
-    	    	String updateSubjectReq = parseString(inputBuffer, 1);
-    	    	String[] splitSubjectReq = updateSubjectReq.split("-");
-    	    	//checks if the user name exists in the list of registered users
-    	    	for (int i = 0; i < registeredUsers.size(); i++) {
-    	    		if(registeredUsers.get(i).getName().equals(splitSubjectReq[1])) {
-    	    		found4 = true;
-    	    		break;}
-    	    	}
-    	    	// adding the list of objects given from the user
-    	    	for (int i = 2; i<splitSubjectReq.length;i++) {
-    	    		listOfSubjects.add(splitSubjectReq[i]);
-    	    		}
-    	    	 
-    	    	if (found4) {
-    	    		// add the subject + the list of users to the list of subjects 
-    	    		interestedUsers.add(splitSubjectReq[1]); // add user name
-    	    		// This is just a test: The following will add the first subject to the list of subject.
-    	    		// Have to work on it later on.
-    	    		Subject s = new Subject(listOfSubjects.get(0),interestedUsers); // subject, list of users interested in this subject
-        	    	subjects.add(s);
-        	    	sendString("Subject Updated  RQ#: " + splitSubjectReq[0] + "  Name: " + splitSubjectReq[1] + "  List Of Subjects: "+ listOfSubjects, 0, dpReceive.getAddress(), dpReceive.getPort());
-        	    	// need to update the list of subject file
-    	    	}
-    	    	else {
-    	    		sendString("Subject Rejected RQ#: " + splitSubjectReq[0] + "  Name: " + splitSubjectReq[1] + "  List Of Subjects: "+ listOfSubjects, 0, dpReceive.getAddress(), dpReceive.getPort());
+    	    	case 4:
+
+    	    	
+    	    		//TODO: maybe make it return a boolean so we can handle the bad case 
+    	    		updateSubjects(inputBuffer);
     	    		
-    	    	}
+    	    		//first send to other server what happened
+    	    		//subjects-updated - rq - name - list of subjects
+    	    		byte[] otherServerMessage = inputBuffer;
+    	    		otherServerMessage[0] = 105;
+    	    		sendServer(otherServerMessage);
+    	    		
+    	    		//send a confirmation back to the user
+    	    		
+    	    		byte[] userMessage = Arrays.copyOfRange(inputBuffer, 1, inputBuffer.length);
+    	    		String message = new String(userMessage);
+    	    		
+    	    		userMessage[0] = 7;
+    	    		sendString(message, 7, dpReceive.getAddress(), dpReceive.getPort());
+    	    		
+  
     	    	break;
     	    	
     	    	case 11: //publish
@@ -313,6 +304,7 @@ public class UDPServer extends Thread {											//internal server class
     	    
     	    switch(inputBuffer[0]) {	//socket input handler that runs even when not serving
     	    
+    	    
     	    case 100:	//server sync: 
     	    	fm.log("Server Sync Received", inputBuffer);
     	    	
@@ -383,9 +375,15 @@ public class UDPServer extends Thread {											//internal server class
     	    			
     	    		}
     	    	}
+    	    	break;
+    	    
+    	    case 105: //update subjects on other server
+    	    	updateSubjects(inputBuffer);
     	    	
     	    	
+    	    	break;
     	    }
+    	   
     	    
     	    
     	    
@@ -451,6 +449,43 @@ public class UDPServer extends Thread {											//internal server class
 
     	try { serverSocket.send(dpSend); }	//send data
     	catch(IOException e) { e.printStackTrace(); fm.log("message could not be sent"); }
+    }
+    
+    private void updateSubjects(byte[] req) {
+    	boolean userExists=false;
+    	ArrayList<String> listOfNewSubjects = new ArrayList<String>();
+    	String updateSubjectReq = parseString(inputBuffer, 1);
+    	String[] splitSubjectReq = updateSubjectReq.split("-");
+    	//checks if the user name exists in the list of registered users
+    	for (int i = 0; i < registeredUsers.size(); i++) {
+    		if(registeredUsers.get(i).getName().equals(splitSubjectReq[1])) {
+    		userExists = true;
+    		break;}
+    	}
+    	// adding the list of objects given from the user
+    	for (int i = 2; i<splitSubjectReq.length;i++) {
+    		listOfNewSubjects.add(splitSubjectReq[i]);
+    		}
+    	 
+    	if (userExists) {
+    		boolean subExists = false;
+    		for (String newName : listOfNewSubjects) {	
+    			subExists = false;
+    			for (int i = 0; i < subjects.size(); i++) {
+    				if (newName.equals(subjects.get(i).getName())) {
+    					//this is the case if the subject already exists
+    					subjects.get(i).addUser(splitSubjectReq[1]);
+    					subExists = true;
+    					break;
+    				}
+    			}
+				if(!subExists) {
+					Subject newSub = new Subject(newName);
+					newSub.addUser(splitSubjectReq[1]);
+					subjects.add(newSub);
+				}
+    		}
+    	}
     }
     
     

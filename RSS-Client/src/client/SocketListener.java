@@ -118,6 +118,12 @@ public class SocketListener extends Thread {
     	    	fm.log("Publish Message Received", inputBuffer);
     	    	break;
     	    	
+    	    case 7: 
+    	    	
+    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	fm.log("Update Subjects Accepted!", inputBuffer);
+    	    	break;
+    	    	
     	    case 50: //server init
     	    	client_app.display("message received");
     	    	stopInitTimeout();						//stop timer on server response
@@ -227,22 +233,22 @@ public boolean sendString(String message, int op) {
 		String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
 		return formatted;	
 	}
-public String formatUpdateReq(String name, String ip, int port) {
+	public String formatUpdateReq(String name, String ip, int port) {
+			
+			String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
+			return formatted;	
+		}
+	public String formatSubjectReq(String name, String subject) {
 		
-		String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
+		String formatted = genRqNum() + "-" + name + "-" + subject;
 		return formatted;	
 	}
-public String formatSubjectReq(String name, String subject) {
+	public String formatPublishReq(String name, String subject, String text) {
+		
+		String formatted = genRqNum() + "-" + name + "-" + subject +"-" + text;
+		return formatted;	
+	}
 	
-	String formatted = genRqNum() + "-" + name + "-" + subject;
-	return formatted;	
-}
-public String formatPublishReq(String name, String subject, String text) {
-	
-	String formatted = genRqNum() + "-" + name + "-" + subject +"-" + text;
-	return formatted;	
-}
-	 
 	private String parseString(byte[] data, int start) { 	//function to convert byte array to string
     	
         if (data == null) return null; 
