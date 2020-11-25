@@ -6,18 +6,16 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Vector;
 
-//import Server.Subject;
-
 import java.util.Scanner;
+
 public class client_app {
 	
 
-	
 	public static SocketListener socket;
 
 	public static void main(String[] args) {
-
-BufferedReader cin = new BufferedReader(new InputStreamReader(System.in));  
+		
+		BufferedReader cin = new BufferedReader(new InputStreamReader(System.in));  
 		
 		try {
 		
@@ -37,7 +35,7 @@ BufferedReader cin = new BufferedReader(new InputStreamReader(System.in));
 			//start socket listener thread
 			socket = new SocketListener(server1IP, server2IP, server1Port, server2Port, localPort);
 			socket.start();
-
+			
 		} catch (IOException e) {
 			System.out.println("An IOException was thrown during console input");
 			e.printStackTrace();
@@ -47,7 +45,8 @@ BufferedReader cin = new BufferedReader(new InputStreamReader(System.in));
 			System.out.println("\ninvalid value\n"+e.getMessage()+"\nvalue should be an integer\nexiting ...");
 			return;
 		}
-
+		
+		//try {
 		
 		Scanner in = new Scanner(System.in);
 		Scanner stg = new Scanner(System.in);
@@ -153,28 +152,7 @@ BufferedReader cin = new BufferedReader(new InputStreamReader(System.in));
 				socket.start();
 			}else {System.out.println("The socket is already listening ");}
 			   break;
-			}
-			
-			
-		}
-	        
-		socket.sendString("hello world", 1);
-		
-		
-		//tests for reg and dereg
-		
-		String rr = socket.formatRegisterReq("test", "localhost", 8989);
-		
-		//send reg to both servers
-		socket.sendString(rr, 1);
-		socket.sendString(rr, 1);
-		
-		//test a deregistration
-		//String dr = socket.formatDeregisterReq("test");
-		//socket.sendString(dr, 2, 1);
-		
-		
-		
+			}}
 		
 	}
 	

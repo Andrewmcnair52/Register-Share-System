@@ -84,6 +84,7 @@ public class UDPServer extends Thread {											//internal server class
     	     *  3: update ip and socket
     	     *  4: update subjects of interest
     	     *  11: publish
+    	     *  20 client serverSelectPing
     	     * 	100: server sync
     	     * 	101: server sync confirmation
     	     * 	102: server switch

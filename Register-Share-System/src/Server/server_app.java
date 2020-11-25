@@ -35,9 +35,9 @@ public class server_app {
 				server.start();
 				
 				//for testing purposes
-				Subject e = new Subject("Books");
-				e.addUser("test");
-				server.subjects.add(e);
+//				Subject e = new Subject("Books");
+//				e.addUser("test");
+//				server.subjects.add(e);
 			
 			} else if(serverNum==2) {
 				
@@ -101,5 +101,4 @@ public class server_app {
 		}
 
 	}
-	
 }
