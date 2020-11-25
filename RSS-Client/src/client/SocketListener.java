@@ -12,6 +12,8 @@ import java.util.TimerTask;
 
 import java.util.Random;
 
+
+
 public class SocketListener extends Thread {
 
 	private int BUFF_SIZE = 1066;	//input buffer size
@@ -25,7 +27,6 @@ public class SocketListener extends Thread {
 	ClientFileManager fm = new ClientFileManager();
 	
 	private Random RNG = new Random(System.currentTimeMillis());
-	
 	public int serverSelect = 0;	//0 means uninitialized
 	public boolean awaitServerSelect = false;
 	public boolean alreadyChanged = false;
@@ -38,15 +39,12 @@ public class SocketListener extends Thread {
 	initTimeoutTask initTask;
 	sendTimeoutTask sendTask;
 	
-	
 	public SocketListener(String inServer1IP, String inServer2IP, int inServer1Port, int inServer2Port, int inLocalPort) {
-		
 		//initialize members
 		inputBuffer = new byte[BUFF_SIZE];
 		localPort = inLocalPort;
 		server1Port = inServer1Port;
 		server2Port = inServer2Port;
-		
 		//set server IP's
 		try {
 			if(inServer1IP.equals("localhost")) server1IP = InetAddress.getLocalHost();
@@ -54,28 +52,26 @@ public class SocketListener extends Thread {
 			if(inServer2IP.equals("localhost")) server2IP = InetAddress.getLocalHost();
 			else server2IP = InetAddress.getByName(inServer2IP);
 		} catch (IOException e) { e.printStackTrace(); fm.log("error while resolving InerAddress");}
-	
 	}
 	
 	public void run() {
-		
 		//declare socket
-		try { socket = new DatagramSocket(localPort); }
-		catch (SocketException e) {
-			e.printStackTrace();
-			fm.log("SocketException while declaring datagram socket, closing socketListener"); 
-			return;
-		}
-		
-		runInit();		//server init moved to its own function so it can be reused
+				try { socket = new DatagramSocket(localPort); }
+				catch (SocketException e) {
+					e.printStackTrace();
+					fm.log("SocketException while declaring datagram socket, closing socketListener"); 
+					return;
+				}
+				
+				runInit();		//server init moved to its own function so it can be reused
     	
-		//loop for receiving/parsing/handling incoming data
-    	while(true) {
+    	while(true) {	//loop for receiving/parsing/handling incoming data
     		
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     			
+    		
     	    try { socket.receive(dpReceive); }			//wait till data is received
-    	    catch (IOException e) { fm.log("stopping SocketListener"); return; }
+    	    catch (IOException e) { fm.log("stopping SocketListener"); return;}
     	    
     	    if(awaitingResponse) {
     	    	stopSendTimeout();	//stop timer, also resets awaitingResponse
@@ -96,31 +92,33 @@ public class SocketListener extends Thread {
     	     * 51: server switch notification
     	     * 52: server update notification
     	     */
-
+    	    
+    	    
     	    switch(inputBuffer[0]) {
 	    	
     	    case 0:	// a test case, print message to console
-    	    	client_app.display("data recieved, from server" + parseString(inputBuffer, 1));
+
+    	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
     	    	fm.log("Test case received", inputBuffer);
     	    	break;
     	    	
-			case 4:
+    	    case 4:
+    	    	
     	    	client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Registration accepted recieved", inputBuffer);
     	    	break;
     	    	
     	    case 5:
+    	    	
     	    	client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Registration denied recieved", inputBuffer);
     	    	break;
-              
     	    case 6: //receive message
     	    	
     	    	client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Publish Message Received", inputBuffer);
     	    	break;
     	    	
-
     	    case 50: //server init
     	    	client_app.display("message received");
     	    	stopInitTimeout();						//stop timer on server response
@@ -143,42 +141,41 @@ public class SocketListener extends Thread {
     	    	if(serverSelect==1) serverSelect = 2;
     	    	else serverSelect = 1;
     	    	break;
-    	    	
+ 	
     	    case 52: //server update notification
     	    	
     	    	//parse ip and port
     	    	String data = parseString(inputBuffer, 1);
     	    	int newServerPort = Integer.parseInt( data.substring(data.indexOf(':')+1) );
-				String strIP = data.substring(0,data.indexOf(':'));
-				InetAddress newServerIP;
-				try {
-					if(Objects.equals(strIP, "localhost")) newServerIP = InetAddress.getLocalHost();
-					else newServerIP = InetAddress.getByName(strIP);
-				} catch(UnknownHostException e) { fm.log("cant resolve new host ip"); break;}
+				    String strIP = data.substring(0,data.indexOf(':'));
+				    InetAddress newServerIP;
+				    try {
+					    if(Objects.equals(strIP, "localhost")) newServerIP = InetAddress.getLocalHost();
+					    else newServerIP = InetAddress.getByName(strIP);
+				    } catch(UnknownHostException e) { fm.log("cant resolve new host ip"); break;}
 				
     	    	//set ip and port
     	    	if(dpReceive.getPort()==server1Port) {
     			    server1IP = newServerIP;
     			    server1Port = newServerPort;
-    			} else if(dpReceive.getPort()==server2Port) {
-    				server2IP = newServerIP;
+    			  } else if(dpReceive.getPort()==server2Port) {
+    				  server2IP = newServerIP;
     			    server2Port = newServerPort;
-    			}
+    			  }
     	    	break;
-
+              
     	    default:
     	    	client_app.display("invalid operation recieved, initial byte out of range");
     	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
-    	    }
     	    
-    	    
+          }
     	    
     	    inputBuffer = new byte[BUFF_SIZE]; 	// Clear the buffer after every message. 
     	}
 		
 	}
 	
-	public boolean sendString(String message, int op) {
+public boolean sendString(String message, int op) {
 		
 		if(send_lock) {
 			client_app.display("cant send message right now");
@@ -251,24 +248,23 @@ public class SocketListener extends Thread {
 	public String formatRegisterReq(String name, String ip, int port) {
 		
 		String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
-		return formatted;
-		
-		
-		//sendString(registerReq, 0, 1);
-		
-		
-		
-		
+		return formatted;	
 	}
-	
-	
-	//the name would be replaced if some kind of login was implemented.. 
-	public String formatPublishReq(String name, String subject, String text) {
+public String formatUpdateReq(String name, String ip, int port) {
 		
-		String formatted = genRqNum() + "-" + name + "-" + subject + "-" + text;
-		return formatted;
-		
+		String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
+		return formatted;	
 	}
+public String formatSubjectReq(String name, String subject) {
+	
+	String formatted = genRqNum() + "-" + name + "-" + subject;
+	return formatted;	
+}
+public String formatPublishReq(String name, String subject, String text) {
+	
+	String formatted = genRqNum() + "-" + name + "-" + subject +"-" + text;
+	return formatted;	
+}
 	 
 	private String parseString(byte[] data, int start) { 	//function to convert byte array to string
     	
@@ -284,6 +280,7 @@ public class SocketListener extends Thread {
 		return RNG.nextInt(128);
 	}
 	
+
 	//==================================================
 	 // Timer Stuff
 	 //==================================================
