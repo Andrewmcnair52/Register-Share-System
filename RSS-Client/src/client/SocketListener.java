@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+
 import java.util.Random;
 
 
@@ -89,7 +90,7 @@ public class SocketListener extends Thread {
     	     * 
     	     * 50: server init
     	     * 51: server switch notification
-    	     * 
+    	     * 52: server update notification
     	     */
     	    
     	    
@@ -140,12 +141,34 @@ public class SocketListener extends Thread {
     	    	if(serverSelect==1) serverSelect = 2;
     	    	else serverSelect = 1;
     	    	break;
+ 	
+    	    case 52: //server update notification
+    	    	
+    	    	//parse ip and port
+    	    	String data = parseString(inputBuffer, 1);
+    	    	int newServerPort = Integer.parseInt( data.substring(data.indexOf(':')+1) );
+				    String strIP = data.substring(0,data.indexOf(':'));
+				    InetAddress newServerIP;
+				    try {
+					    if(Objects.equals(strIP, "localhost")) newServerIP = InetAddress.getLocalHost();
+					    else newServerIP = InetAddress.getByName(strIP);
+				    } catch(UnknownHostException e) { fm.log("cant resolve new host ip"); break;}
+				
+    	    	//set ip and port
+    	    	if(dpReceive.getPort()==server1Port) {
+    			    server1IP = newServerIP;
+    			    server1Port = newServerPort;
+    			  } else if(dpReceive.getPort()==server2Port) {
+    				  server2IP = newServerIP;
+    			    server2Port = newServerPort;
+    			  }
+    	    	break;
+              
     	    default:
     	    	client_app.display("invalid operation recieved, initial byte out of range");
     	    	client_app.display("data recieved, from server: " + parseString(inputBuffer, 1));
-    	    }
     	    
-    	    
+          }
     	    
     	    inputBuffer = new byte[BUFF_SIZE]; 	// Clear the buffer after every message. 
     	}
@@ -257,82 +280,62 @@ public String formatPublishReq(String name, String subject, String text) {
 		return RNG.nextInt(128);
 	}
 	
-	//used to pack big ints into bytes, was used before but could still come in handy
-	private byte[] packIntInBytes(int i)
-	{
-	  byte[] result = new byte[4];
 
-	  result[0] = (byte) (i >> 24);
-	  result[1] = (byte) (i >> 16);
-	  result[2] = (byte) (i >> 8);
-	  result[3] = (byte) (i);
-
-	  return result;
-	}
+	//==================================================
+	 // Timer Stuff
+	 //==================================================
+	    
+	   class initTimeoutTask extends TimerTask {
+		   public void run() { 
+			   socket.close();
+			   client_app.display("timeout expired, no server is serving");
+		   }
+	   }
+	   
+	   class sendTimeoutTask extends TimerTask {
+		   public void run() {
+			   client_app.display("timeout expired, no response from server about last sent message");
+			   awaitingResponse = false;
+			   runInit();
+		   }
+	   }
+	   
+	   
+	   public void startInitTimeout() {
+		   
+		   if(initTimeout!=null) { initTimeout.cancel(); initTimeout.purge(); }
+		   initTimeout = new Timer();
+		   initTask = new initTimeoutTask();
+		   initTimeout.schedule(initTask, 5000);	//5s timeout
+	   	
+	   }
+	   
+	  public void startSendTimeout() {
+		  if(sendTimeout!=null) { sendTimeout.cancel(); sendTimeout.purge(); }
+		  sendTimeout = new Timer();
+		  sendTask = new sendTimeoutTask();
+		  sendTimeout.schedule(sendTask, 5000);	//5s timeout
+		  awaitingResponse = true;
+	  }
+	  
+	  public void stopInitTimeout() {
+		  if(initTimeout==null) client_app.display("cant stop initTimeout because its null");
+		  else {
+			  initTimeout.cancel();
+			  initTimeout.purge();
+		  }
+	  }
+	  
+	  public void stopSendTimeout() {
+		  if(sendTimeout==null) client_app.display("cant stop sendTimeout because its null");
+		  else {
+			  sendTimeout.cancel();
+			  sendTimeout.purge();
+		  }
+		  awaitingResponse = false;
+	  }
+	    
+	 //==================================================
 	
-	// get an int back from bytes
-    private int fromByteArray(byte[] bytes) {
-         return ((bytes[0] & 0xFF) << 24) | 
-                ((bytes[1] & 0xFF) << 16) | 
-                ((bytes[2] & 0xFF) << 8 ) | 
-                ((bytes[3] & 0xFF) << 0 );
-    }
-  //==================================================
-  	 // Timer Stuff
-  	 //==================================================
-  	    
-  	   class initTimeoutTask extends TimerTask {
-  		   public void run() { 
-  			   socket.close();
-  			   client_app.display("timeout expired, no server is serving");
-  		   }
-  	   }
-  	   
-  	   class sendTimeoutTask extends TimerTask {
-  		   public void run() {
-  			   client_app.display("timeout expired, no response from server about last sent message");
-  			   awaitingResponse = false;
-  			   runInit();
-  		   }
-  	   }
-  	   
-  	   
-  	   public void startInitTimeout() {
-  		   
-  		   if(initTimeout!=null) { initTimeout.cancel(); initTimeout.purge(); }
-  		   initTimeout = new Timer();
-  		   initTask = new initTimeoutTask();
-  		   initTimeout.schedule(initTask, 5000);	//5s timeout
-  	   	
-  	   }
-  	   
-  	  public void startSendTimeout() {
-  		  if(sendTimeout!=null) { sendTimeout.cancel(); sendTimeout.purge(); }
-  		  sendTimeout = new Timer();
-  		  sendTask = new sendTimeoutTask();
-  		  sendTimeout.schedule(sendTask, 5000);	//5s timeout
-  		  awaitingResponse = true;
-  	  }
-  	  
-  	  public void stopInitTimeout() {
-  		  if(initTimeout==null) client_app.display("cant stop initTimeout because its null");
-  		  else {
-  			  initTimeout.cancel();
-  			  initTimeout.purge();
-  		  }
-  	  }
-  	  
-  	  public void stopSendTimeout() {
-  		  if(sendTimeout==null) client_app.display("cant stop sendTimeout because its null");
-  		  else {
-  			  sendTimeout.cancel();
-  			  sendTimeout.purge();
-  		  }
-  		  awaitingResponse = false;
-  	  }
-  	    
-  	 //==================================================
-  	
-  	
 	
 }

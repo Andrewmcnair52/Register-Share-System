@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
+import java.util.concurrent.Semaphore;
 
 
 public class UDPServer extends Thread {											//internal server class
@@ -47,32 +48,29 @@ public class UDPServer extends Thread {											//internal server class
     ArrayList<String> interestedUsers = new ArrayList<String>();
     ArrayList<Subject> subjects = new ArrayList<Subject>();
 	
+	private Semaphore serverSwitchLock = new Semaphore(1);
 	
-    public UDPServer(int localPort, int serverNum) {
-    	inputBuffer = new byte[BUFF_SIZE];
-    	
-    	fm = new FileManager(serverNum);
-    	
-    	
-    	try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
+  public UDPServer(int localPort, int serverNum) {
+    
+    inputBuffer = new byte[BUFF_SIZE];
+    fm = new FileManager(serverNum, this);
+    
+    try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
 		catch (SocketException e) { 
 			e.printStackTrace(); 
 			fm.log("socketException while creating DatagramSocket");
 		}
     	
-    }
+  }
     
-    public void run() {
-    	
+  public void run() {
     	
     	while(true) {	//loop for receiving/parsing/handling incoming data
 	     	
     		dpReceive = new DatagramPacket(inputBuffer,inputBuffer.length);
     		
     	    try { serverSocket.receive(dpReceive); }			//wait till data is received
-    	    catch (IOException e) { fm.log("socketException while recieving data");}
-    	    
-    	    
+          catch (IOException e) { System.out.println("socketException while recieving data, closing UDPServer"); return;}
     	    
     	    //----------------------------
     	    // server input parser/handler
@@ -84,7 +82,12 @@ public class UDPServer extends Thread {											//internal server class
     	     *  3: update ip and socket
     	     *  4: update subjects of interest
     	     *  11: publish
-    	     *  20 client serverSelectPing
+           * 	20: client serverSelect ping
+           *  50: client serverSelect ping
+         	 *  51: other server is requesting to update
+         	 *  52: server update request response
+         	 *  53: other server done updating
+         	 *  99: server update sync
     	     * 	100: server sync
     	     * 	101: server sync confirmation
     	     * 	102: server switch
@@ -291,28 +294,85 @@ public class UDPServer extends Thread {											//internal server class
     	    		}
     	    		
     	    	}
-    	    	
-    	    	
-    	    	//if it does does this user have it?
-    	    	// okay send to all users that have it with this format
-    	    	//message - name - subject - text
-    	    	
-    	    	//if not send back DENIED! - rq - reason
-    	    	
     	    	break;
     	    	
-    	    	case 50: //client serverSelect ping
+            case 50: //client serverSelect ping
     	    		sendString("pong", 50, dpReceive.getAddress(), dpReceive.getPort());
     	    		break;
     	    			          
     	    	default:
     	    		break;
+
+            case 51: //other server is requesting to update
+            	try { serverSwitchLock.acquire(); } catch (InterruptedException e) { e.printStackTrace(); }	//aquire permit to lock server switch
+            	if(isServing) {
+            		sendServer("accepted",52);	//if permit obtained, and still serving, success, server will not switch until release
+            		fm.log("received update server request, accepted, server switch is locked");
+            	}
+            	else { 	//if not serving, server switch occured, other server is now serving, deny request
+            		sendServer("denied",52);
+            		serverSwitchLock.release();	
+            		fm.log("received update server request, denied, server switch happened first");
+            	}
+
+            	break;
+            	
+            case 53: //other server done updating
+            	
+            	//parse ip and port
+    	    	String data = parseString(inputBuffer, 1);
+    	    	int newServerPort = Integer.parseInt( data.substring(data.indexOf(':')+1) );
+				String strIP = data.substring(0,data.indexOf(':'));
+				InetAddress newServerIP;
+				try {
+					if(Objects.equals(strIP, "localhost")) newServerIP = InetAddress.getLocalHost();
+					else newServerIP = InetAddress.getByName(strIP);
+				} catch(UnknownHostException e) { fm.log("cant resolve new host ip"); break;}
+            	
+				//update this servers record of other server
+            	otherServerIP = newServerIP;
+            	otherServerPort = newServerPort;
+            	
+            	//other server needs a sync to get this servers info
+            	sendServer("", 99);
+            	
+            	fm.log("server update done, server switch unlocked");
+            	serverSwitchLock.release();	//release lock allowing server switch to happen
+            	break;
+            	
+            
+            default:
+              break;
     	    	
     	    	
     	    }
     	    
-    	    switch(inputBuffer[0]) {	//socket input handler that runs even when not serving
+    	    switch((int)inputBuffer[0]) {	//socket input handler that runs even when not serving
     	    
+    	    case 52: //update request response
+            	
+            	if(Objects.equals(parseString(inputBuffer,1), "accepted")) {
+            		System.out.println("update server request: accepted");
+            		sendAllClients(server_app.newServerIP+":"+server_app.newServerPort, 52);	//send server update notification to clients
+            		sendServer(server_app.newServerIP+":"+server_app.newServerPort,53);			//send server new ip and port so it can resync
+            		System.out.println("other server is now communicating with: "+server_app.newServerIP+":"+server_app.newServerPort);
+            		dualServerSync = false;
+            	} else {
+            		System.out.println("update server request: denied");
+            		if(isServing) System.out.println("this server is now serving");
+            	}
+            	synchronized(this) { notify(); }
+            	break;
+            	
+    	    case 99: 	//server update sync
+    	    	fm.log("Server Sync Received", inputBuffer);
+    	    	otherServerIP = dpReceive.getAddress();
+    	    	otherServerPort = dpReceive.getPort();
+    	    	dualServerSync = true;	//set sync to true, leave isServing off since other server is serving
+    	    	serverSwitchTimer = new Timer();		//initialize servers timer
+    	    	serverSwitchExec = new TimerExec();		//initialize servers timerTask
+    	    	break;
+    	    	
     	    case 100:	//server sync: 
     	    	fm.log("Server Sync Received", inputBuffer);
     	    	
@@ -333,12 +393,9 @@ public class UDPServer extends Thread {											//internal server class
     	    		serverSwitchTimer = new Timer();		//initialize server 2's timer
         	    	serverSwitchExec = new TimerExec();		//initialize server2's timerTask
     	    	}
-    	    	if(isServing) {
-    	    		fm.log("This server is serving\n");
-    	    	}
-    	    	else {
-    	    		fm.log("This server is not serving\n");
-    	    	}
+
+    	    	if(isServing) fm.log("this server is serving");
+    	    	else fm.log("this server is not serving");
     	    	break;
     	    	
     	    case 101: //server sync confirmation
@@ -352,7 +409,6 @@ public class UDPServer extends Thread {											//internal server class
     	    	fm.log("Server Switch Received", inputBuffer);
     	    	//other server has notified us that of a server switch
     	    	isServing = true;	//start serving
-    	    	fm.log("this server is now serving");
     	    	startTimer();		//start timer for next server switch
     	    	break;
     	    	
@@ -428,13 +484,29 @@ public class UDPServer extends Thread {											//internal server class
     	
 	}
     
+    public void sendAllClients(String message, int op) {	//send to all registered clients
+    	Iterator<User> it = registeredUsers.iterator();
+		while(it.hasNext()) { 
+			User tmpUser = it.next();
+			try {
+			   if(tmpUser.getIp().equals("localhost")) {
+				   sendString(message, op, InetAddress.getLocalHost(), tmpUser.getSocket());
+			   } else {
+				   sendString(message, op, InetAddress.getByName(tmpUser.getIp()), tmpUser.getSocket());
+			   }
+			} catch(UnknownHostException e) { 
+				fm.log("unknown host exception while sending to all clients, cannot parse ip: "+tmpUser.getIp());
+			}
+		}
+    }
+    
     //sends a string with message code, to the other server
     public void sendServer(String message, int op) {
 		
 		//convert string to byte array
 		byte[] tmpBuff = message.getBytes();		//get message as a byte array
 		outputBuffer = new byte[tmpBuff.length+1];
-		outputBuffer[0] = (byte) op;				//append a zero to beginning for server side command handler
+		outputBuffer[0] = (byte) op;				//append op to beginning for server side command handler
 		for(int i=0; i<tmpBuff.length; i++)			//copy message byte array to output buffer
 		outputBuffer[i+1] = tmpBuff[i];
 		
@@ -458,27 +530,17 @@ public class UDPServer extends Thread {											//internal server class
  // Timer Stuff
  //==================================================
     
-   class TimerExec extends TimerTask {
+   class TimerExec extends TimerTask {	//runs when server switch timer triggers
 	   public void run() { 
-		   fm.log("timer triggered, switching servers");
 		   
-		  fm.log("This server is no longer serving\n");
-		  fm.log("Sending server switch notice to other server");
-		//notify other server first
-		  sendServer("",102);
+		   try { serverSwitchLock.acquire(); } catch (InterruptedException e) { e.printStackTrace(); }	//if locked, wait until unlocked
 		   
-			 //notify registered users of server switch
-			   Iterator<User> it = registeredUsers.iterator();
-			   while(it.hasNext()) { 
-				   User tmpUser = it.next();
-				   try {
-				       if(tmpUser.getIp().equals("localhost")) sendString("", 51, InetAddress.getLocalHost(), tmpUser.getSocket());
-				       else sendString("", 51, InetAddress.getByName(tmpUser.getIp()), tmpUser.getSocket());
-				   } catch(UnknownHostException e) { 
-					   fm.log("can't update client about server switch, cannot parse ip: "+tmpUser.getIp());
-				   }
-			   }
-		   isServing = false;	//stop serving
+		   fm.log("timer triggered, this server is no longer serving serving");
+		   sendServer("",102);		//notify other server first
+		   sendAllClients("", 51);	//notify registered users of server switch
+		   isServing = false;		//stop serving
+		   
+		   serverSwitchLock.release();
 		   
 	   }
    }
@@ -494,8 +556,7 @@ public class UDPServer extends Thread {											//internal server class
 	   //project description says to "pick a random value say 5m"
 	   int val = 240000 + rand.nextInt(360000); //pick a value between 240,000 and 360,000 (4m-6m)
 	   //int val = 20000 + rand.nextInt(2000);	//20-22 seconds, left here for debugging purposes
-	   
-	   fm.log("server switch in: " + val + "\n");
+	   fm.log("this server is now serving, next server switch in: " + val/1000 + "s");
    	
 	   //schedule(TimerTask task, Date time)
 	   // task: task to run

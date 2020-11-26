@@ -28,12 +28,12 @@ public class FileManager {
 	
 	ArrayList<String> logList = new ArrayList<>();
 	
-	public FileManager(int serverNum) {
+	public FileManager(int serverNum, UDPServer server) {
 		userListFile = new File("userlist_server"+serverNum+".json");
 		log = new File("log_server"+serverNum+".txt");
 		
 		try {
-			if(!userListFile.createNewFile()) loadUserList();
+			if(!userListFile.createNewFile()) server.registeredUsers = loadUserList();
 			else updateUserList(new ArrayList<>());
 			log.createNewFile();
 		} catch (IOException e) { e.printStackTrace(); }
@@ -76,19 +76,10 @@ public class FileManager {
 		String sList = new String();
 	
 		
-		try {
-			sList = Files.readString(userListFile.toPath());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		try { sList = Files.readString(userListFile.toPath()); } catch (IOException e) { e.printStackTrace(); }
 		
-		try {
-			list = om.readValue(sList, new TypeReference<ArrayList<User>>() {});
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		try { list = om.readValue(sList, new TypeReference<ArrayList<User>>() {}); }
+		catch (JsonProcessingException e) { e.printStackTrace(); }
 		
 		return list;
 	}

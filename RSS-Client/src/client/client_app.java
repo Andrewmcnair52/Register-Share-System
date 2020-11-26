@@ -35,7 +35,7 @@ public class client_app {
 			//start socket listener thread
 			socket = new SocketListener(server1IP, server2IP, server1Port, server2Port, localPort);
 			socket.start();
-			
+
 		} catch (IOException e) {
 			System.out.println("An IOException was thrown during console input");
 			e.printStackTrace();
@@ -45,8 +45,6 @@ public class client_app {
 			System.out.println("\ninvalid value\n"+e.getMessage()+"\nvalue should be an integer\nexiting ...");
 			return;
 		}
-		
-		//try {
 		
 		Scanner in = new Scanner(System.in);
 		Scanner stg = new Scanner(System.in);
