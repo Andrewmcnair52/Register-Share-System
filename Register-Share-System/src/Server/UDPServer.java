@@ -192,21 +192,25 @@ public class UDPServer extends Thread {											//internal server class
 
 
 					//TODO: maybe make it return a boolean so we can handle the bad case 
-					updateSubjects(inputBuffer);
-
-					//first send to other server what happened
-					//subjects-updated - rq - name - list of subjects
-					byte[] otherServerMessage = inputBuffer;
-					otherServerMessage[0] = 105;
-					sendServer(otherServerMessage);
-
-					//send a confirmation back to the user
-
+					boolean success = updateSubjects(inputBuffer);
 					byte[] userMessage = Arrays.copyOfRange(inputBuffer, 1, inputBuffer.length);
 					String message = new String(userMessage);
+					if(success) {
+						//first send to other server what happened
+						//subjects-updated - rq - name - list of subjects
+						byte[] otherServerMessage = inputBuffer;
+						otherServerMessage[0] = 105;
+						sendServer(otherServerMessage);
 
-					userMessage[0] = 7;
-					sendString(message, 7, dpReceive.getAddress(), dpReceive.getPort());
+						//send a confirmation back to the user
+						sendString(message, 7, dpReceive.getAddress(), dpReceive.getPort());
+					}
+					
+					else {
+						//return the problem message to the user
+						sendString(message, 8, dpReceive.getAddress(), dpReceive.getPort());
+					}
+
 
 
 					break;
@@ -525,7 +529,7 @@ public class UDPServer extends Thread {											//internal server class
 		catch(IOException e) { e.printStackTrace(); fm.log("message could not be sent"); }
 	}
 
-	private void updateSubjects(byte[] req) {
+	private boolean updateSubjects(byte[] req) {
 		boolean userExists=false;
 		ArrayList<String> listOfNewSubjects = new ArrayList<String>();
 		String updateSubjectReq = parseString(inputBuffer, 1);
@@ -535,6 +539,9 @@ public class UDPServer extends Thread {											//internal server class
 			if(registeredUsers.get(i).getName().equals(splitSubjectReq[1])) {
 				userExists = true;
 				break;}
+		}
+		if (!userExists) {
+			return false;
 		}
 		// adding the list of objects given from the user
 		for (int i = 2; i<splitSubjectReq.length;i++) {
@@ -560,6 +567,7 @@ public class UDPServer extends Thread {											//internal server class
 				}
 			}
 		}
+		return true;
 	}
 
 
