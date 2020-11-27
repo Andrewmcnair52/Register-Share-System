@@ -52,7 +52,7 @@ public class client_app {
 		boolean checked = false;
 		ArrayList<String> subjects;
 		System.out.println("Welcome to client console");
-		while(!stop) {
+		while(true) {
 			System.out.println("\nPlease select an option from the menu");
 			System.out.println("0\t Testing the server");
 			System.out.println("1\t Register");
@@ -136,7 +136,7 @@ public class client_app {
 				socket.sendString(pr, 11);
 				break;
 			case 6: System.out.println("Stopping the app");
-				stop = true;
+			System.exit(0);
 			   break;
 			case 7: 
 			if(!socket.isAlive()) {	
