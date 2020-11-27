@@ -10,6 +10,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -189,13 +190,13 @@ public class UDPServer extends Thread {											//internal server class
 					break;
 
 				case 4:
-
-
-					//TODO: maybe make it return a boolean so we can handle the bad case 
+					fm.log("Update Subjects Received ", inputBuffer);
+					
 					boolean success = updateSubjects(inputBuffer);
 					byte[] userMessage = Arrays.copyOfRange(inputBuffer, 1, inputBuffer.length);
 					String message = new String(userMessage);
 					if(success) {
+						fm.updateSubjects(subjects);
 						//first send to other server what happened
 						//subjects-updated - rq - name - list of subjects
 						byte[] otherServerMessage = inputBuffer;
@@ -208,6 +209,7 @@ public class UDPServer extends Thread {											//internal server class
 					
 					else {
 						//return the problem message to the user
+						fm.log("No user registered who sent request ", inputBuffer);
 						sendString(message, 8, dpReceive.getAddress(), dpReceive.getPort());
 					}
 
@@ -440,7 +442,9 @@ public class UDPServer extends Thread {											//internal server class
 				break;
 
 			case 105: //update subjects on other server
+				fm.log("Update subjects on other server Received", inputBuffer);
 				updateSubjects(inputBuffer);
+				fm.updateSubjects(subjects);
 
 
 				break;
