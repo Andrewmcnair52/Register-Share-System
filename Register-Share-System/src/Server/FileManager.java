@@ -37,16 +37,12 @@ public class FileManager {
 		try {
 			if(!userListFile.createNewFile()) server.registeredUsers = loadUserList();
 			else updateUserList(new ArrayList<>());
-			if(!subjectFile.createNewFile()) loadSubjects();
+			if(!subjectFile.createNewFile()) server.subjects = loadSubjectList();
 			log.createNewFile();
 		} catch (IOException e) { e.printStackTrace(); }
 		
 	}
 	
-	private void loadSubjects() {
-		// TODO Auto-generated method stub
-		
-	}
 
 	public void printLastLogs(int num) {
 		for (int i = 1; i <= num; i++) {
@@ -90,7 +86,7 @@ public class FileManager {
 		String sList = new String();
 	
 		try {
-			sList = Files.readString(userListFile.toPath());
+			sList = Files.readString(subjectFile.toPath());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

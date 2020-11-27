@@ -12,9 +12,8 @@ public class User {
 		this.socket = socket;
 	}
 	
-	public User() {
-		
-	}
+	//for mrs. jackson
+	public User() {}
 	
 	public String getName() {
 		return name;
