@@ -23,6 +23,7 @@ public class FileManager {
 	
 	File userListFile;
 	File log;
+	File subjectFile;
 	
 	BufferedWriter bw;
 	
@@ -31,15 +32,22 @@ public class FileManager {
 	public FileManager(int serverNum, UDPServer server) {
 		userListFile = new File("userlist_server"+serverNum+".json");
 		log = new File("log_server"+serverNum+".txt");
+		subjectFile = new File("subjects"+serverNum+".json");
 		
 		try {
 			if(!userListFile.createNewFile()) server.registeredUsers = loadUserList();
 			else updateUserList(new ArrayList<>());
+			if(!subjectFile.createNewFile()) loadSubjects();
 			log.createNewFile();
 		} catch (IOException e) { e.printStackTrace(); }
 		
 	}
 	
+	private void loadSubjects() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	public void printLastLogs(int num) {
 		for (int i = 1; i <= num; i++) {
 			try {
@@ -51,6 +59,16 @@ public class FileManager {
 		}
 	}
 	
+	public void updateSubjects(List<Subject> subjectList) {
+		ObjectMapper om = new ObjectMapper();
+		
+		try {
+			om.writeValue(subjectFile, subjectList);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	public void updateUserList(List<User> userList) {
 		
@@ -58,11 +76,35 @@ public class FileManager {
 		
 		try {
 			om.writeValue(userListFile, userList);
-			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public ArrayList<Subject> loadSubjectList() {
+		ObjectMapper om = new ObjectMapper();
+		
+		ArrayList<Subject> list = new ArrayList<Subject>();
+		
+		String sList = new String();
+	
+		try {
+			sList = Files.readString(userListFile.toPath());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			list = om.readValue(sList, new TypeReference<ArrayList<Subject>>() {});
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return list;
+		
 	}
 	
 	//public void deleteUser(String name) {}
