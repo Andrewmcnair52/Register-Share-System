@@ -18,6 +18,9 @@ public class Subject {
 		this.users = new ArrayList<String>();
 	}
 	
+	//for mrs. jackson
+	public Subject() {}
+	
 	public String getName() {
 		return name;
 	}
