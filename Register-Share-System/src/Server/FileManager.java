@@ -38,7 +38,7 @@ public class FileManager {
 			if(!userListFile.createNewFile()) server.registeredUsers = loadUserList();
 			else updateUserList(new ArrayList<>());
 			if(!subjectFile.createNewFile()) server.subjects = loadSubjectList();
-			else updateUserList(new ArrayList<>());
+			else updateSubjects(new ArrayList<>());
 			log.createNewFile();
 		} catch (IOException e) { e.printStackTrace(); }
 		
