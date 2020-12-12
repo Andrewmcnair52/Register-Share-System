@@ -51,7 +51,13 @@ public class ClientFileManager {
 	}
 	
 	public void log(String message, byte[] buffer) {
-		String sMes = new String(Arrays.copyOfRange(buffer, 1, buffer.length));
+		
+		int realLen = buffer.length - 1;
+		while(buffer[realLen] == 0) {
+			realLen--;
+		}
+		
+		String sMes = new String(Arrays.copyOfRange(buffer, 1, realLen + 1));
 		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
