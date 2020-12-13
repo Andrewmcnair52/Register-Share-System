@@ -139,9 +139,8 @@ public class client_app {
 				System.out.println("\t  Enter the subject name"); 
 				String subjectPublish = in.next();
 				System.out.println("\t  Enter the text to publish"); 
-				String textPublsih = in.next();
-				String publishInput = in.next();
-				String pr = socket.formatPublishReq(namePublish, subjectPublish, publishInput);
+				String textPublish = in.next();
+				String pr = socket.formatPublishReq(namePublish, subjectPublish, textPublish);
 				socket.sendString(pr, 11);
 				break;
 			case 6: System.out.println("Stopping the app");
