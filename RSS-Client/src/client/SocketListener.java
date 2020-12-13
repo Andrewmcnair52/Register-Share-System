@@ -27,6 +27,8 @@ public class SocketListener extends Thread {
 	ClientFileManager fm = new ClientFileManager();
 	
 	private Random RNG = new Random(System.currentTimeMillis());
+	private int rq_num = 1;
+	
 	public int serverSelect = 0;	//0 means uninitialized
 	public boolean awaitServerSelect = false;
 	public boolean alreadyChanged = false;
@@ -253,28 +255,28 @@ public boolean sendString(String message, int op) {
 	
 	
 	public String formatDeregisterReq(String name) {
-		String formatted = genRqNum() + "-" + name;
+		String formatted = rq_num++ + "-" + name;
 		return formatted;
 	}
 	
 	public String formatRegisterReq(String name, String ip, int port) {
 		
-		String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
+		String formatted = rq_num++ + "-" + name + "-" + ip + "-" + port;
 		return formatted;	
 	}
 	public String formatUpdateReq(String name, String ip, int port) {
 			
-			String formatted = genRqNum() + "-" + name + "-" + ip + "-" + port;
+			String formatted = rq_num++ + "-" + name + "-" + ip + "-" + port;
 			return formatted;	
 		}
 	public String formatSubjectReq(String name, String subject) {
 		
-		String formatted = genRqNum() + "-" + name + "-" + subject;
+		String formatted = rq_num++ + "-" + name + "-" + subject;
 		return formatted;	
 	}
 	public String formatPublishReq(String name, String subject, String text) {
 		
-		String formatted = genRqNum() + "-" + name + "-" + subject +"-" + text;
+		String formatted = rq_num++ + "-" + name + "-" + subject +"-" + text;
 		return formatted;	
 	}
 	

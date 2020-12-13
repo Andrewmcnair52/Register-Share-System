@@ -90,6 +90,7 @@ public class UDPServer extends Thread {											//internal server class
 			 *  103: registration on other server
 			 *  104: dereg on other server
 			 *  105: update subjects on other server
+			 *  106; failed register on other server
 			 */
 
 			//note: we cast the op codes to bytes when we send them, meaning we can only use op codes in the range of [-128, 127]
@@ -138,9 +139,24 @@ public class UDPServer extends Thread {											//internal server class
 					else if (regStatus == 1) {
 						//username in use
 						sendString("RQ#: " + reqSplit[0] + ": Username taken", 5, dpReceive.getAddress(), dpReceive.getPort());
+						
+						String failMes = "Received invalid registration request: Username \"" + newUser.getName() + "\" already in use";
+						byte[] failArr = failMes.getBytes(); 
+						byte[] failwop = new byte[failArr.length+1];
+						failwop[0] = 106;
+						System.arraycopy(failArr, 0, failwop, 1, failArr.length);
+						sendServer(failwop);
+						fm.log(failMes);
 					} else if (regStatus == 2) {
 						//ip and port in use
+						String failMes = "Received invalid registration request: IP/PORT combination: " + newUser.getIp() + ":" + newUser.getSocket() + " already in use";
+						byte[] failArr = failMes.getBytes(); 
+						byte[] failwop = new byte[failArr.length+1];
+						failwop[0] = 106;
+						System.arraycopy(failArr, 0, failwop, 1, failArr.length);
+						sendServer(failwop);
 						sendString("RQ#: " + reqSplit[0] + ": ip/port combo taken", 5, dpReceive.getAddress(), dpReceive.getPort());
+						fm.log(failMes);
 					}
 
 					break;
@@ -165,7 +181,7 @@ public class UDPServer extends Thread {											//internal server class
 							fm.log("Sending deregistration notice");
 							sendServer(splitReq[1], 104);
 
-							//tell user hes been deregitered
+							//TODO: tell user hes been deregitered
 							break;
 						}
 					}
@@ -448,7 +464,17 @@ public class UDPServer extends Thread {											//internal server class
 
 
 				break;
+				
+			case 106: //reg fail on other server
+				//need to remove op
+//				byte[] toLog = new byte[inputBuffer.length-1];
+//				
+//				String toPrint = 
+				fm.log("Message from other server: ", inputBuffer);
+				break;
 			}
+			
+			
 
 
 
@@ -633,10 +659,10 @@ public class UDPServer extends Thread {											//internal server class
 
 
 		for(User u : registeredUsers) {
-			if(u.getName() == user.getName()) {
+			if(u.getName().equals(user.getName())) {
 				return 1; //username already exists
 			}
-			else if (u.getIp() == user.getIp() && u.getSocket() == user.getSocket()) {
+			else if (u.getIp().equals(user.getIp()) && u.getSocket() == user.getSocket()) {
 				return 2; //ip and socket already registered
 			}
 		}

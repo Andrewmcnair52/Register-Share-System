@@ -15,12 +15,21 @@ public class client_app {
 
 	public static void main(String[] args) {
 		
-		BufferedReader cin = new BufferedReader(new InputStreamReader(System.in));  
+		BufferedReader cin = new BufferedReader(new InputStreamReader(System.in));
+		
+		
+		//not sure if im gunna use this actually..
+		//lets get things functional then ill play with how it works
+//		String userName = "";
+//		String userIP = "";
+		
+		int userPort = 0;
 		
 		try {
 		
 			System.out.print("local port: ");
 			int localPort = Integer.parseInt( cin.readLine() );
+			userPort = localPort;
 			
 			System.out.print("enter <IP>:<Port> of server1: ");
 			String inServer1 = cin.readLine();

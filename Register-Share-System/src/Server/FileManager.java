@@ -140,7 +140,13 @@ public class FileManager {
 	}
 	
 	public void log(String message, byte[] buffer) {
-		String sMes = new String(Arrays.copyOfRange(buffer, 1, buffer.length));
+		
+		int realLen = buffer.length - 1;
+		while(buffer[realLen] == 0) {
+			realLen--;
+		}
+		
+		String sMes = new String(Arrays.copyOfRange(buffer, 1, realLen + 1));
 		
 		logList.add("[" + java.time.LocalTime.now() + "] " + message + " : " + sMes);
 		
