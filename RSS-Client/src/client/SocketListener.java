@@ -89,7 +89,10 @@ public class SocketListener extends Thread {
     	     * 0: Test Case
     	     * 4: Registation Accepted
     	     * 5: Registration Denied
-    	     * 
+    	     * 6: publish message received
+    	     * 7: update subjects accepted
+    	     * 8: update subjects rejected
+    	     * 9: deregistered
     	     * 50: server init
     	     * 51: server switch notification
     	     * 52: server update notification
@@ -131,6 +134,12 @@ public class SocketListener extends Thread {
     	    	
     	    	client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Update Subjects Rejected!", inputBuffer);
+    	    	break;
+    	    	
+    	    case 9:
+    	    	
+    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	fm.log("Deregistered", inputBuffer);
     	    	break;
     	    	
     	    case 50: //server init

@@ -180,8 +180,25 @@ public class UDPServer extends Thread {											//internal server class
 							//tell other server about dereg
 							fm.log("Sending deregistration notice");
 							sendServer(splitReq[1], 104);
+							
+							//remove them from all subjects
+							ArrayList<Integer> subjectsYouIn = new ArrayList<>();
+							
+							for(Subject s : subjects) {
+								
+								for(int j = 0; j < s.getUsers().size(); j++) {
+									if (s.getUsers().get(j).equals(splitReq[1])) {
+										subjectsYouIn.add(j);
+									}
+								}
+							}
+							//TODO: also remove them from the other servers subject list
+							for(Integer ind : subjectsYouIn ) {
+								subjects.get(ind).removeUser(splitReq[1]);
+							}
+							fm.updateSubjects(subjects);
 
-							//TODO: tell user hes been deregitered
+							sendString("You've been deregistered!", 9, dpReceive.getAddress(), dpReceive.getPort());
 							break;
 						}
 					}
@@ -453,6 +470,23 @@ public class UDPServer extends Thread {											//internal server class
 
 						//update file
 						fm.updateUserList(registeredUsers);
+						
+						//remove them from all subjects
+						ArrayList<Integer> subjectsYouIn = new ArrayList<>();
+						
+						for(Subject s : subjects) {
+							
+							for(int j = 0; j < s.getUsers().size(); j++) {
+								if (s.getUsers().get(j).equals(deregUser)) {
+									subjectsYouIn.add(j);
+								}
+							}
+						}
+						//TODO: also remove them from the other servers subject list
+						for(Integer ind : subjectsYouIn ) {
+							subjects.get(ind).removeUser(deregUser);
+						}
+						fm.updateSubjects(subjects);
 
 					}
 				}
