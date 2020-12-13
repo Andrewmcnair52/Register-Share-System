@@ -466,11 +466,7 @@ public class UDPServer extends Thread {											//internal server class
 				break;
 				
 			case 106: //reg fail on other server
-				//need to remove op
-//				byte[] toLog = new byte[inputBuffer.length-1];
-//				
-//				String toPrint = 
-				fm.log("Message from other server: ", inputBuffer);
+				fm.log("Message from other server", inputBuffer);
 				break;
 			}
 			
