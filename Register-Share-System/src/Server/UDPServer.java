@@ -215,7 +215,8 @@ public class UDPServer extends Thread {											//internal server class
 						fm.updateSubjects(subjects);
 						//first send to other server what happened
 						//subjects-updated - rq - name - list of subjects
-						byte[] otherServerMessage = inputBuffer;
+						
+						byte[] otherServerMessage = Arrays.copyOf(inputBuffer, inputBuffer.length);
 						otherServerMessage[0] = 105;
 						sendServer(otherServerMessage);
 
@@ -461,8 +462,6 @@ public class UDPServer extends Thread {											//internal server class
 				fm.log("Update subjects on other server Received", inputBuffer);
 				updateSubjects(inputBuffer);
 				fm.updateSubjects(subjects);
-
-
 				break;
 				
 			case 106: //reg fail on other server
