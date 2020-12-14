@@ -80,8 +80,7 @@ public class UDPServer extends Thread {											//internal server class
 			 *  2: deregister
 			 *  3: update ip and socket
 			 *  4: update subjects of interest
-			 *  11: publish
-			 * 	20: client serverSelect ping
+			 *  5: publish
 			 *  50: client serverSelect ping
 			 *  51: other server is requesting to update
 			 *  52: server update request response
@@ -332,13 +331,6 @@ public class UDPServer extends Thread {											//internal server class
 						}
 
 					}
-
-
-					//if it does does this user have it?
-					// okay send to all users that have it with this format
-					//message - name - subject - text
-
-					//if not send back DENIED! - rq - reason
 
 					break;
 
