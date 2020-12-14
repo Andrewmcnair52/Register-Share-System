@@ -91,6 +91,7 @@ public class UDPServer extends Thread {											//internal server class
 			 *  104: dereg on other server
 			 *  105: update subjects on other server
 			 *  106; failed register on other server
+			 *  107; update user on other server
 			 */
 
 			//note: we cast the op codes to bytes when we send them, meaning we can only use op codes in the range of [-128, 127]
@@ -214,6 +215,12 @@ public class UDPServer extends Thread {											//internal server class
 							sendString("RQ#: " + splitUpdateReq[0] + ": "+"Update confirmed ", 0, dpReceive.getAddress(), dpReceive.getPort());
 							fm.updateUserList(registeredUsers); //update file
 							found = true;
+							
+							//inform other server
+							byte[] forOtherServer = Arrays.copyOf(inputBuffer, inputBuffer.length);
+							forOtherServer[0] = 107;
+							sendServer(forOtherServer);
+							
 							break;
 						}
 					}
@@ -502,12 +509,23 @@ public class UDPServer extends Thread {											//internal server class
 			case 106: //reg fail on other server
 				fm.log("Message from other server", inputBuffer);
 				break;
+			
+			
+			case 107: //update on other server
+				String updateUserReq = parseString(inputBuffer, 1);
+				String[] splitUpdateReq = updateUserReq.split("-");
+				for (int i = 0; i < registeredUsers.size(); i++) {
+					if(registeredUsers.get(i).getName().equals(splitUpdateReq[1])) {
+						registeredUsers.get(i).setIp(splitUpdateReq[2]);
+						registeredUsers.get(i).setSocket(Integer.parseInt(splitUpdateReq[3]));
+						sendString("RQ#: " + splitUpdateReq[0] + ": "+"Update confirmed ", 0, dpReceive.getAddress(), dpReceive.getPort());
+						fm.updateUserList(registeredUsers); //update file
+						break;
+					}
+				}
+				
+				break;
 			}
-			
-			
-
-
-
 
 
 
