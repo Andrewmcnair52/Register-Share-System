@@ -26,7 +26,7 @@ public class server_app {
 		try {
 			
 			//prompt user for ip and port
-			System.out.print("please enter this servers port (between 4000-4999: ");
+			System.out.print("please enter this servers port (between 4000-4999): ");
 			int thisServersPort = Integer.parseInt( cin.readLine() );
 			
 			//prompt user to designate server as first or second
