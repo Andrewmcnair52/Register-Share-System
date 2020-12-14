@@ -184,11 +184,11 @@ public class UDPServer extends Thread {											//internal server class
 							//remove them from all subjects
 							ArrayList<Integer> subjectsYouIn = new ArrayList<>();
 							
-							for(Subject s : subjects) {
-								
-								for(int j = 0; j < s.getUsers().size(); j++) {
-									if (s.getUsers().get(j).equals(splitReq[1])) {
-										subjectsYouIn.add(j);
+							for(int k = 0; k < subjects.size(); k++) {
+								for(int j = 0; j < subjects.get(k).getUsers().size(); j++) {
+									if (subjects.get(k).getUsers().get(j).equals(splitReq[1])) {
+										subjectsYouIn.add(k);
+										break;
 									}
 								}
 							}
@@ -463,33 +463,34 @@ public class UDPServer extends Thread {											//internal server class
 				fm.log("Unregister on other server Received", inputBuffer);
 
 				String deregUser = parseString(inputBuffer, 1);
-
+				
 				for (int i = 0; i < registeredUsers.size(); i++) {
 					if(registeredUsers.get(i).getName().equals(deregUser)) {
 						registeredUsers.remove(i);
 
 						//update file
 						fm.updateUserList(registeredUsers);
-						
+
 						//remove them from all subjects
 						ArrayList<Integer> subjectsYouIn = new ArrayList<>();
 						
-						for(Subject s : subjects) {
-							
-							for(int j = 0; j < s.getUsers().size(); j++) {
-								if (s.getUsers().get(j).equals(deregUser)) {
-									subjectsYouIn.add(j);
+						for(int k = 0; k < subjects.size(); k++) {
+							for(int j = 0; j < subjects.get(k).getUsers().size(); j++) {
+								if (subjects.get(k).getUsers().get(j).equals(deregUser)) {
+									subjectsYouIn.add(k);
+									break;
 								}
 							}
 						}
-						//TODO: also remove them from the other servers subject list
+						
 						for(Integer ind : subjectsYouIn ) {
 							subjects.get(ind).removeUser(deregUser);
 						}
 						fm.updateSubjects(subjects);
-
+						break;
 					}
 				}
+				
 				break;
 
 			case 105: //update subjects on other server
