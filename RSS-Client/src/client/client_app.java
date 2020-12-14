@@ -43,7 +43,7 @@ public class client_app {
 			System.out.print("Enter a username: ");
 			loggedUser = cin.readLine();
 		
-			System.out.print("local port: ");
+			System.out.print("local port (between 5000-5999): ");
 			localPort = Integer.parseInt( cin.readLine() );
 			
 			System.out.print("enter <IP>:<Port> of server1: ");
@@ -95,6 +95,8 @@ public class client_app {
 	        System.out.println("5\t Publish on a subject of interest");
 	        System.out.println("6\t Stop the client app");
 	        System.out.println("7\t Restart the socket Listener");
+	        System.out.println("8\t Print last 10 logs");
+	        System.out.println("9\t Print last 10 messages");
 	        System.out.print("> ");
 	        while (!in.hasNextInt()) in.next();
 			int select = Integer.parseInt(in.nextLine());
@@ -166,6 +168,14 @@ public class client_app {
 				socket.start();
 			}else {System.out.println("The socket is already listening ");}
 			   break;
+			   
+			case 8:
+				socket.fm.printLastLogs(10);
+				break;
+				
+			case 9:
+				socket.fm.printLastMessages(10);
+				break;
 			}}
 		
 	}

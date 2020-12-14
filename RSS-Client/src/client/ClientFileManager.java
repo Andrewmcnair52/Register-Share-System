@@ -20,6 +20,9 @@ public class ClientFileManager {
 	File log;
 	File messages;
 	
+	ArrayList<String> messageList = new ArrayList<>();
+	ArrayList<String> logList = new ArrayList<>();
+	
 	FileWriter fw;
 	BufferedWriter bw;
 	PrintWriter pw;
@@ -43,6 +46,7 @@ public class ClientFileManager {
 		//simple log a message user wants
 		
 		try {
+			logList.add(java.time.LocalTime.now() + ": " + message + System.getProperty("line.separator"));
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
 			output.write(java.time.LocalTime.now() + ": " + message + System.getProperty("line.separator"));
 			output.close();
@@ -54,7 +58,8 @@ public class ClientFileManager {
 	}
 	
 	public void recordMessage(String message) {
-		//simple log a message user wants
+		
+		messageList.add(java.time.LocalTime.now() + ": " + message + System.getProperty("line.separator"));
 		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(messages, true));
@@ -69,6 +74,8 @@ public class ClientFileManager {
 	
 	public void log(String message, byte[] buffer) {
 		
+		
+		
 		int realLen = buffer.length - 1;
 		while(buffer[realLen] == 0) {
 			realLen--;
@@ -76,7 +83,10 @@ public class ClientFileManager {
 		
 		String sMes = new String(Arrays.copyOfRange(buffer, 1, realLen + 1));
 		
+		
+		
 		try {
+			logList.add(java.time.LocalTime.now() + ": " + message + ": " + sMes + System.getProperty("line.separator"));
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
 			output.write(java.time.LocalTime.now() + ": " + message + ": " + sMes + System.getProperty("line.separator"));
 			output.close();
@@ -84,4 +94,26 @@ public class ClientFileManager {
 			e.printStackTrace();
 		}
 	}	
+	
+	public void printLastLogs(int num) {
+		for (int i = 1; i <= num; i++) {
+			try {
+				System.out.println(logList.get(logList.size() - i));
+			}catch (IndexOutOfBoundsException e) {
+				System.out.println("End of List");
+				return;
+			}
+		}
+	}
+	
+	public void printLastMessages(int num) {
+		for (int i = 1; i <= num; i++) {
+			try {
+				System.out.println(messageList.get(messageList.size() - i));
+			}catch (IndexOutOfBoundsException e) {
+				System.out.println("End of List");
+				return;
+			}
+		}
+	}
 }
