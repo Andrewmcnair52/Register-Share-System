@@ -147,7 +147,6 @@ public class client_app {
 				}while(!yesNo.equals("n"));
 				String sr = socket.formatSubjectReq(loggedUser, subjectInput);
 				socket.sendString(sr, 4);
-				System.out.println(subjectInput);
 				break;
 				
 			case 5: 
