@@ -155,7 +155,7 @@ public class client_app {
 				System.out.println("\t  Enter the text to publish"); 
 				String textPublish = in.nextLine();
 				String pr = socket.formatPublishReq(loggedUser, subjectPublish, textPublish);
-				socket.sendString(pr, 11);
+				socket.sendString(pr, 5);
 				break;
 			case 6: System.out.println("Stopping the app");
 			System.exit(0);

@@ -261,7 +261,7 @@ public class UDPServer extends Thread {											//internal server class
 
 					break;
 
-				case 11: //publish
+				case 5: //publish
 
 					fm.log("Publish Request Received", inputBuffer);
 
