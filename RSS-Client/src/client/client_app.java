@@ -56,9 +56,6 @@ public class client_app {
 		}
 		
 		Scanner in = new Scanner(System.in);
-		Scanner stg = new Scanner(System.in);
-		boolean stop=false;
-		boolean checked = false;
 		ArrayList<String> subjects;
 		System.out.println("Welcome to client console");
 		while(true) {
@@ -73,60 +70,60 @@ public class client_app {
 	        System.out.println("7\t Restart the socket Listener");
 	        System.out.print("> ");
 	        while (!in.hasNextInt()) in.next();
-			int select = in.nextInt();
+			int select = Integer.parseInt(in.nextLine());
 			switch(select){
 			case 0: String test="";
 					System.out.println("\t  Enter a word to be sent");
 					System.out.print("> ");
 					Scanner scan = new Scanner(System.in);
-					test+=scan.nextLine();
-			        //scan.close();
+					test=scan.nextLine();
 					socket.sendString(test, 0);
 				break;
 			case 1: 
 			System.out.println("\t  Enter the name");
 			System.out.print("> ");
-			String nameInput = in.next();
+			String nameInput = in.nextLine();
 			System.out.println("\t  Enter the Ip Address");
 			System.out.print("> ");
-			String IpAddressInput = in.next();
+			String IpAddressInput = in.nextLine();
 			System.out.println("\t  Enter the socket number");
 			System.out.print("> ");
-			int socketInput = in.nextInt();
+			int socketInput = Integer.parseInt(in.nextLine());
 			String rr = socket.formatRegisterReq(nameInput, IpAddressInput, socketInput);
 			socket.sendString(rr, 1);
 				break;
 			case 2: 
 				System.out.println("\t  Enter the name"); 
 				System.out.print("> ");
-				nameInput = in.next();
+				nameInput = in.nextLine();
 				String dr = socket.formatDeregisterReq(nameInput);
 				socket.sendString(dr, 2);
 				break;
 			case 3: 
 			System.out.println("\t  Enter the user's name you want to update");
-			String nameUpdate = in.next();
+			String nameUpdate = in.nextLine();
 			System.out.println("\t  Update Ip Address"); 
-			String IpAddressUpdate = in.next();
+			String IpAddressUpdate = in.nextLine();
 			System.out.println("\t  Update socket number"); 
-			int socketUpdate = in.nextInt();
+			int socketUpdate = Integer.parseInt(in.nextLine());
 			String ur = socket.formatUpdateReq(nameUpdate, IpAddressUpdate, socketUpdate);
 			socket.sendString(ur, 3);		
 			   break;
 			case 4: 
 				System.out.println("\t  What is the user's name?"); 
-				String userName = in.next();
+				String userName = in.nextLine();
 				String yesNo ="n";
 				String subjectInput = "";
 				subjects = new ArrayList<String>();
 				do {
 					System.out.println("\t  Add a subject of interest"); 
-					String sInput = in.next();
+					String sInput = in.nextLine();
 					subjects.add(subjectInput);
 					subjectInput = subjectInput + sInput +"-";
 					
 					System.out.println("\t  Do you want to add more subject? y/n"); 
-					yesNo = in.next();
+					yesNo = in.nextLine();
+					char yesNo_ = yesNo.charAt(0);
 				}while(!yesNo.equals("n"));
 				String sr = socket.formatSubjectReq(userName, subjectInput);
 				socket.sendString(sr, 4);
@@ -135,11 +132,11 @@ public class client_app {
 				
 			case 5: 
 				System.out.println("\t  Enter the user's name");
-				String namePublish = in.next();
+				String namePublish = in.nextLine();
 				System.out.println("\t  Enter the subject name"); 
-				String subjectPublish = in.next();
+				String subjectPublish = in.nextLine();
 				System.out.println("\t  Enter the text to publish"); 
-				String textPublish = in.next();
+				String textPublish = in.nextLine();
 				String pr = socket.formatPublishReq(namePublish, subjectPublish, textPublish);
 				socket.sendString(pr, 11);
 				break;
