@@ -18,6 +18,7 @@ public class ClientFileManager {
 	//needs to have a file, and methods to add to that file
 	
 	File log;
+	File messages;
 	
 	FileWriter fw;
 	BufferedWriter bw;
@@ -26,9 +27,11 @@ public class ClientFileManager {
 	public ClientFileManager() {
 		
 		this.log = new File(client_app.loggedUser + "ClientLog.txt");
+		this.messages = new File(client_app.loggedUser + "Messages.txt");
 		
 		try {
 			log.createNewFile();
+			messages.createNewFile();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -41,6 +44,20 @@ public class ClientFileManager {
 		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
+			output.write(java.time.LocalTime.now() + ": " + message + System.getProperty("line.separator"));
+			output.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void recordMessage(String message) {
+		//simple log a message user wants
+		
+		try {
+			BufferedWriter output = new BufferedWriter(new FileWriter(messages, true));
 			output.write(java.time.LocalTime.now() + ": " + message + System.getProperty("line.separator"));
 			output.close();
 		} catch (IOException e) {

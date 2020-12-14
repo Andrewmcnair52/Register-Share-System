@@ -120,17 +120,21 @@ public class SocketListener extends Thread {
     	    	break;
     	    case 6: //receive message
     	    	
-    	    	//is this the message i just published ? if so lets log that instead
     	    	
-    	    	//lets break down this input buffer and nicely format it. then we will save it to the log and also to a list so it can be printed
+    	    	
+    	    	
     	    	String message = parseString(inputBuffer, 1);
     	    	//rq# name mes
     	    	String[] messSplit = message.split("-");
     	    	
-    	    	//client_app.display(parseString(inputBuffer, 1));
-    	    	
-    	    	fm.log("Message received from " + messSplit[1] + " for subject " + messSplit[2] + ": " + messSplit[3]);
-    	    	//fm.log("Publish Message Received", inputBuffer);
+    	    	//is this the message i just published ? if so lets log that instead
+    	    	if(messSplit[1].equals(client_app.loggedUser)) {
+    	    		fm.log("Message succesfully published!");
+    	    	}
+    	    	else {
+        	    	fm.recordMessage("Message received from " + messSplit[1] + " for subject " + messSplit[2] + ": " + messSplit[3]);
+    	    	}
+
     	    	break;
     	    	
     	    case 7: 
