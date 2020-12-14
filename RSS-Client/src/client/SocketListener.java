@@ -109,36 +109,45 @@ public class SocketListener extends Thread {
     	    	
     	    case 4:
     	    	
-    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	//client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Registration accepted recieved", inputBuffer);
     	    	break;
     	    	
     	    case 5:
     	    	
-    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	//client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Registration denied recieved", inputBuffer);
     	    	break;
     	    case 6: //receive message
     	    	
-    	    	client_app.display(parseString(inputBuffer, 1));
-    	    	fm.log("Publish Message Received", inputBuffer);
+    	    	//is this the message i just published ? if so lets log that instead
+    	    	
+    	    	//lets break down this input buffer and nicely format it. then we will save it to the log and also to a list so it can be printed
+    	    	String message = parseString(inputBuffer, 1);
+    	    	//rq# name mes
+    	    	String[] messSplit = message.split("-");
+    	    	
+    	    	//client_app.display(parseString(inputBuffer, 1));
+    	    	
+    	    	fm.log("Message received from " + messSplit[1] + " for subject " + messSplit[2] + ": " + messSplit[3]);
+    	    	//fm.log("Publish Message Received", inputBuffer);
     	    	break;
     	    	
     	    case 7: 
     	    	
-    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	//client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Update Subjects Accepted!", inputBuffer);
     	    	break;
     	    	
     	    case 8: 
     	    	
-    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	//client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Update Subjects Rejected!", inputBuffer);
     	    	break;
     	    	
     	    case 9:
     	    	
-    	    	client_app.display(parseString(inputBuffer, 1));
+    	    	//client_app.display(parseString(inputBuffer, 1));
     	    	fm.log("Deregistered", inputBuffer);
     	    	break;
     	    	

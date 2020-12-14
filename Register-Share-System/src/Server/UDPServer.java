@@ -48,6 +48,9 @@ public class UDPServer extends Thread {											//internal server class
 
 		inputBuffer = new byte[BUFF_SIZE];
 		fm = new FileManager(serverNum, this);
+		
+		this.subjects = fm.loadSubjectList();
+		this.registeredUsers = fm.loadUserList();
 
 		try { serverSocket = new DatagramSocket(localPort); }	//create datagram socket and bind to port
 		catch (SocketException e) { 
@@ -317,14 +320,15 @@ public class UDPServer extends Thread {											//internal server class
 						//now send the messages
 						for(User u : usersToSendTo) {
 							InetAddress uAd = null;
+							
 							try {
 								uAd = InetAddress.getByName(u.getIp());
 							} catch (UnknownHostException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
-							fm.log("Publishing message", pReqSplit[0] + " " + pReqSplit[1] + " " + pReqSplit[3]);
-							sendString(pReqSplit[0] + " " + pReqSplit[1] + " " + pReqSplit[3], 6, uAd, u.getSocket() );
+							fm.log("Publishing message", pReqSplit[0] + "-" + pReqSplit[1] + "-" + pReqSplit[3]);
+							sendString(pReqSplit[0] + "-" + pReqSplit[1] + "-" + pReqSplit[2] + "-" + pReqSplit[3], 6, uAd, u.getSocket() );
 						}
 
 					}

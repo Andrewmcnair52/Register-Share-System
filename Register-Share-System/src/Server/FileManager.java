@@ -126,11 +126,11 @@ public class FileManager {
 	public void log(String message) {
 		//simple log a message user wants
 		
-		logList.add(message);
+		logList.add(java.time.LocalTime.now() + ": " + message);
 		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
-			output.write(message + System.getProperty("line.separator"));
+			output.write(java.time.LocalTime.now() + ": " + message + System.getProperty("line.separator"));
 			output.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

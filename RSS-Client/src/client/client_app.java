@@ -5,13 +5,14 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Vector;
-
+import java.util.concurrent.TimeUnit;
 import java.util.Scanner;
 
 public class client_app {
 	
 
 	public static SocketListener socket;
+	public static String loggedUser;
 
 	public static void main(String[] args) {
 		
@@ -20,16 +21,30 @@ public class client_app {
 		
 		//not sure if im gunna use this actually..
 		//lets get things functional then ill play with how it works
-//		String userName = "";
-//		String userIP = "";
 		
-		int userPort = 0;
+		
+		String ezIp = "";
+		int localPort = 0;
+		boolean registered = false;
+		
 		
 		try {
+			
+			System.out.print("Are you already registered? (y/n):");
+			String inRegQ = cin.readLine();
+			if (inRegQ.equals("y"))
+				registered = true;
+			
+			if (!registered) {
+				System.out.print("enter your ip: ");
+				ezIp = cin.readLine();
+			}
+			
+			System.out.print("Enter a username: ");
+			loggedUser = cin.readLine();
 		
 			System.out.print("local port: ");
-			int localPort = Integer.parseInt( cin.readLine() );
-			userPort = localPort;
+			localPort = Integer.parseInt( cin.readLine() );
 			
 			System.out.print("enter <IP>:<Port> of server1: ");
 			String inServer1 = cin.readLine();
@@ -55,15 +70,27 @@ public class client_app {
 			return;
 		}
 		
+		if (!registered) {
+			try {
+				TimeUnit.SECONDS.sleep(1);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			//auto register them
+			String rr = socket.formatRegisterReq(loggedUser, ezIp, localPort);
+			socket.sendString(rr, 1);
+		}
+		
 		Scanner in = new Scanner(System.in);
 		ArrayList<String> subjects;
 		System.out.println("Welcome to client console");
 		while(true) {
 			System.out.println("\nPlease select an option from the menu");
 			System.out.println("0\t Testing the server");
-			System.out.println("1\t Register");
+			System.out.println("1\t Register another user");
 	        System.out.println("2\t Deregister");
-	        System.out.println("3\t Update a user information");
+	        System.out.println("3\t Update user information");
 	        System.out.println("4\t Update subject of interest");
 	        System.out.println("5\t Publish on a subject of interest");
 	        System.out.println("6\t Stop the client app");
@@ -93,25 +120,18 @@ public class client_app {
 			socket.sendString(rr, 1);
 				break;
 			case 2: 
-				System.out.println("\t  Enter the name"); 
-				System.out.print("> ");
-				nameInput = in.nextLine();
-				String dr = socket.formatDeregisterReq(nameInput);
+				String dr = socket.formatDeregisterReq(loggedUser);
 				socket.sendString(dr, 2);
 				break;
 			case 3: 
-			System.out.println("\t  Enter the user's name you want to update");
-			String nameUpdate = in.nextLine();
 			System.out.println("\t  Update Ip Address"); 
 			String IpAddressUpdate = in.nextLine();
 			System.out.println("\t  Update socket number"); 
 			int socketUpdate = Integer.parseInt(in.nextLine());
-			String ur = socket.formatUpdateReq(nameUpdate, IpAddressUpdate, socketUpdate);
+			String ur = socket.formatUpdateReq(loggedUser, IpAddressUpdate, socketUpdate);
 			socket.sendString(ur, 3);		
 			   break;
 			case 4: 
-				System.out.println("\t  What is the user's name?"); 
-				String userName = in.nextLine();
 				String yesNo ="n";
 				String subjectInput = "";
 				subjects = new ArrayList<String>();
@@ -125,19 +145,17 @@ public class client_app {
 					yesNo = in.nextLine();
 					char yesNo_ = yesNo.charAt(0);
 				}while(!yesNo.equals("n"));
-				String sr = socket.formatSubjectReq(userName, subjectInput);
+				String sr = socket.formatSubjectReq(loggedUser, subjectInput);
 				socket.sendString(sr, 4);
 				System.out.println(subjectInput);
 				break;
 				
 			case 5: 
-				System.out.println("\t  Enter the user's name");
-				String namePublish = in.nextLine();
 				System.out.println("\t  Enter the subject name"); 
 				String subjectPublish = in.nextLine();
 				System.out.println("\t  Enter the text to publish"); 
 				String textPublish = in.nextLine();
-				String pr = socket.formatPublishReq(namePublish, subjectPublish, textPublish);
+				String pr = socket.formatPublishReq(loggedUser, subjectPublish, textPublish);
 				socket.sendString(pr, 11);
 				break;
 			case 6: System.out.println("Stopping the app");
