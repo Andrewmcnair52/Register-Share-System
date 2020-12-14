@@ -38,11 +38,6 @@ public class server_app {
 				//start server, which will await sync with server 2 before coming online
 				server = new UDPServer(thisServersPort, 1);
 				server.start();
-				
-				//for testing purposes
-//				Subject e = new Subject("Books");
-//				e.addUser("test");
-//				server.subjects.add(e);
 			
 			} else if(serverNum==2) {
 				

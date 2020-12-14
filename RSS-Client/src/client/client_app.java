@@ -99,85 +99,91 @@ public class client_app {
 	        System.out.println("9\t Print last 10 messages");
 	        System.out.print("> ");
 	        while (!in.hasNextInt()) in.next();
-			int select = Integer.parseInt(in.nextLine());
-			switch(select){
-			case 0: String test="";
-					System.out.println("\t  Enter a word to be sent");
-					System.out.print("> ");
-					Scanner scan = new Scanner(System.in);
-					test=scan.nextLine();
-					socket.sendString(test, 0);
-				break;
-			case 1: 
-			System.out.println("\t  Enter the name");
-			System.out.print("> ");
-			String nameInput = in.nextLine();
-			System.out.println("\t  Enter the Ip Address");
-			System.out.print("> ");
-			String IpAddressInput = in.nextLine();
-			System.out.println("\t  Enter the socket number");
-			System.out.print("> ");
-			int socketInput = Integer.parseInt(in.nextLine());
-			String rr = socket.formatRegisterReq(nameInput, IpAddressInput, socketInput);
-			socket.sendString(rr, 1);
-				break;
-			case 2: 
-				String dr = socket.formatDeregisterReq(loggedUser);
-				socket.sendString(dr, 2);
-				break;
-			case 3: 
-			System.out.println("\t  Update Ip Address"); 
-			String IpAddressUpdate = in.nextLine();
-			System.out.println("\t  Update socket number"); 
-			int socketUpdate = Integer.parseInt(in.nextLine());
-			String ur = socket.formatUpdateReq(loggedUser, IpAddressUpdate, socketUpdate);
-			socket.sendString(ur, 3);		
-			   break;
-			case 4: 
-				String yesNo ="n";
-				String subjectInput = "";
-				subjects = new ArrayList<String>();
-				do {
-					System.out.println("\t  Add a subject of interest"); 
-					String sInput = in.nextLine();
-					subjects.add(subjectInput);
-					subjectInput = subjectInput + sInput +"-";
+	        
+	        try {
+	        
+	        	int select = Integer.parseInt(in.nextLine());
+	        	switch(select){
+	        	case 0: String test="";
+	        		System.out.println("\t  Enter a word to be sent");
+	        		System.out.print("> ");
+	        		Scanner scan = new Scanner(System.in);
+	        		test=scan.nextLine();
+	        		socket.sendString(test, 0);
+	        		break;
+	        	case 1: 
+	        		System.out.println("\t  Enter the name");
+	        		System.out.print("> ");
+	        		String nameInput = in.nextLine();
+	        		System.out.println("\t  Enter the Ip Address");
+	        		System.out.print("> ");
+	        		String IpAddressInput = in.nextLine();
+	        		System.out.println("\t  Enter the socket number");
+	        		System.out.print("> ");
+	        		int socketInput = Integer.parseInt(in.nextLine());
+	        		String rr = socket.formatRegisterReq(nameInput, IpAddressInput, socketInput);
+					socket.sendString(rr, 1);
+					break;
+	        	case 2: 
+	        		String dr = socket.formatDeregisterReq(loggedUser);
+	        		socket.sendString(dr, 2);
+	        		break;
+	        	case 3: 
+	        		System.out.println("\t  Update Ip Address"); 
+	        		String IpAddressUpdate = in.nextLine();
+	        		System.out.println("\t  Update socket number"); 
+	        		int socketUpdate = Integer.parseInt(in.nextLine());
+	        		String ur = socket.formatUpdateReq(loggedUser, IpAddressUpdate, socketUpdate);
+	        		socket.sendString(ur, 3);		
+	        		break;
+	        	case 4: 
+	        		String yesNo ="n";
+	        		String subjectInput = "";
+	        		subjects = new ArrayList<String>();
+	        		do {
+	        			System.out.println("\t  Add a subject of interest"); 
+	        			String sInput = in.nextLine();
+	        			subjects.add(subjectInput);
+	        			subjectInput = subjectInput + sInput +"-";
+	        			System.out.println("\t  Do you want to add more subject? y/n"); 
+	        			yesNo = in.nextLine();
+	        			char yesNo_ = yesNo.charAt(0);
+	        		} while(!yesNo.equals("n"));
+	        		String sr = socket.formatSubjectReq(loggedUser, subjectInput);
+	        		socket.sendString(sr, 4);
+	        		break;
+				
+	        	case 5: 
+					System.out.println("\t  Enter the subject name"); 
+					String subjectPublish = in.nextLine();
+					System.out.println("\t  Enter the text to publish"); 
+					String textPublish = in.nextLine();
+					String pr = socket.formatPublishReq(loggedUser, subjectPublish, textPublish);
+					socket.sendString(pr, 5);
+					break;
+				case 6: System.out.println("Stopping the app");
+				System.exit(0);
+				   break;
+				case 7: 
+				if(!socket.isAlive()) {	
+					System.out.println("Restarting the socket Listener... ");
+					socket.start();
+				}else {System.out.println("The socket is already listening ");}
+				   break;
+				   
+				case 8:
+					socket.fm.printLastLogs(10);
+					break;
 					
-					System.out.println("\t  Do you want to add more subject? y/n"); 
-					yesNo = in.nextLine();
-					char yesNo_ = yesNo.charAt(0);
-				}while(!yesNo.equals("n"));
-				String sr = socket.formatSubjectReq(loggedUser, subjectInput);
-				socket.sendString(sr, 4);
-				break;
-				
-			case 5: 
-				System.out.println("\t  Enter the subject name"); 
-				String subjectPublish = in.nextLine();
-				System.out.println("\t  Enter the text to publish"); 
-				String textPublish = in.nextLine();
-				String pr = socket.formatPublishReq(loggedUser, subjectPublish, textPublish);
-				socket.sendString(pr, 5);
-				break;
-			case 6: System.out.println("Stopping the app");
-			System.exit(0);
-			   break;
-			case 7: 
-			if(!socket.isAlive()) {	
-				System.out.println("Restarting the socket Listener... ");
-				socket.start();
-			}else {System.out.println("The socket is already listening ");}
-			   break;
-			   
-			case 8:
-				socket.fm.printLastLogs(10);
-				break;
-				
-			case 9:
-				socket.fm.printLastMessages(10);
-				break;
-			}}
+				case 9:
+					socket.fm.printLastMessages(10);
+					break;
+				}
+	        } catch(NumberFormatException e) {
+	        	System.out.println("invalid input, not a number");
+	        }
 		
+		}
 	}
 	
 	public static void display(String in) {

@@ -190,7 +190,7 @@ public class SocketListener extends Thread {
     	    	break;
     	    	
     	    case 51: //server switch notification
-    	    	client_app.display("received notification of server switch\n");
+    	    	fm.log("received notification of server switch\n");
     	    	if(serverSelect==1) serverSelect = 2;
     	    	else serverSelect = 1;
     	    	break;
