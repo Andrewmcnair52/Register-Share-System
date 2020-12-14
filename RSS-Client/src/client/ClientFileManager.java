@@ -25,7 +25,7 @@ public class ClientFileManager {
 	
 	public ClientFileManager() {
 		
-		this.log = new File("clientLog.txt");
+		this.log = new File(client_app.loggedUser + "ClientLog.txt");
 		
 		try {
 			log.createNewFile();
@@ -41,7 +41,7 @@ public class ClientFileManager {
 		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
-			output.write(message + System.getProperty("line.separator"));
+			output.write(java.time.LocalTime.now() + ": " + message + System.getProperty("line.separator"));
 			output.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -61,7 +61,7 @@ public class ClientFileManager {
 		
 		try {
 			BufferedWriter output = new BufferedWriter(new FileWriter(log, true));
-			output.write(java.time.LocalTime.now() + " " + message + ": " + sMes + System.getProperty("line.separator"));
+			output.write(java.time.LocalTime.now() + ": " + message + ": " + sMes + System.getProperty("line.separator"));
 			output.close();
 		}catch(Exception e) {
 			e.printStackTrace();
