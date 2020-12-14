@@ -167,6 +167,11 @@ public class SocketListener extends Thread {
     	    	fm.log("Update Subjects Rejected!", inputBuffer);
     	    	break;
     	    	
+    	    case 9:
+    	    	String reqNum9 = parseString(inputBuffer,1);
+    	    	fm.log("RQ#" + reqNum9 + " Publish Rejected, non existant subject!");
+    	    	break;
+    	    	
     	    case 50: //server init
     	    	client_app.display("message received");
     	    	stopInitTimeout();						//stop timer on server response

@@ -252,8 +252,8 @@ public class UDPServer extends Thread {											//internal server class
 					
 					else {
 						//return the problem message to the user
-						fm.log("No user registered who sent request ", inputBuffer);
-						sendString(message, 8, dpReceive.getAddress(), dpReceive.getPort());
+						fm.log("Either bad user or bad subject ", inputBuffer);
+						sendString(message + "Bad User or Subject", 8, dpReceive.getAddress(), dpReceive.getPort());
 					}
 
 
@@ -295,6 +295,9 @@ public class UDPServer extends Thread {											//internal server class
 								break;
 							}
 						}
+					} else {
+						fm.log("Publish Request Received for non-existant subject: Rejected");
+						sendString(pReqSplit[0], 9, dpReceive.getAddress(), dpReceive.getPort());
 					}
 
 					//collect their infoooooo... this merits a little thought i guessss...
@@ -604,10 +607,16 @@ public class UDPServer extends Thread {											//internal server class
 	}
 
 	private boolean updateSubjects(byte[] req) {
+		
+
+		
 		boolean userExists=false;
 		ArrayList<String> listOfNewSubjects = new ArrayList<String>();
 		String updateSubjectReq = parseString(inputBuffer, 1);
 		String[] splitSubjectReq = updateSubjectReq.split("-");
+		
+		//does subject exist already? who fucking cares, i only care if hes already in it! 
+		
 		//checks if the user name exists in the list of registered users
 		for (int i = 0; i < registeredUsers.size(); i++) {
 			if(registeredUsers.get(i).getName().equals(splitSubjectReq[1])) {
@@ -629,6 +638,14 @@ public class UDPServer extends Thread {											//internal server class
 				for (int i = 0; i < subjects.size(); i++) {
 					if (newName.equals(subjects.get(i).getName())) {
 						//this is the case if the subject already exists
+						
+						//does the user already have this subject?
+						for(String un : subjects.get(i).users) {
+							if (un.equals(splitSubjectReq[1])) {
+								return false;
+							}
+						}
+						
 						subjects.get(i).addUser(splitSubjectReq[1]);
 						subExists = true;
 						break;
