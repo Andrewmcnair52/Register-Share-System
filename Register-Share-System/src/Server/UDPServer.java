@@ -136,13 +136,13 @@ public class UDPServer extends Thread {											//internal server class
 						sendServer(copiedRegister);
 
 						//then respond to user about what has happened
-						sendString("You have been registered RQ#: " + reqSplit[0], 4, dpReceive.getAddress(), dpReceive.getPort());
+						sendString("You have been registered RQ#: " + reqSplit[0], 1, dpReceive.getAddress(), dpReceive.getPort());
 					}
 
 					//TODO: tell other server about failed registration
 					else if (regStatus == 1) {
 						//username in use
-						sendString("RQ#: " + reqSplit[0] + ": Username taken", 5, dpReceive.getAddress(), dpReceive.getPort());
+						sendString("RQ#: " + reqSplit[0] + ": Username taken", 2, dpReceive.getAddress(), dpReceive.getPort());
 						
 						String failMes = "Received invalid registration request: Username \"" + newUser.getName() + "\" already in use";
 						byte[] failArr = failMes.getBytes(); 
@@ -159,7 +159,7 @@ public class UDPServer extends Thread {											//internal server class
 						failwop[0] = 106;
 						System.arraycopy(failArr, 0, failwop, 1, failArr.length);
 						sendServer(failwop);
-						sendString("RQ#: " + reqSplit[0] + ": ip/port combo taken", 5, dpReceive.getAddress(), dpReceive.getPort());
+						sendString("RQ#: " + reqSplit[0] + ": ip/port combo taken", 2, dpReceive.getAddress(), dpReceive.getPort());
 						fm.log(failMes);
 					}
 
@@ -202,12 +202,12 @@ public class UDPServer extends Thread {											//internal server class
 							}
 							fm.updateSubjects(subjects);
 
-							sendString("You've been deregistered!", 9, dpReceive.getAddress(), dpReceive.getPort());
+							sendString("You've been deregistered!", 3, dpReceive.getAddress(), dpReceive.getPort());
 							break;
 						}
 					}
 					break;
-				case 3:
+				case 3: //update
 					boolean found = false;
 					String updateUserReq = parseString(inputBuffer, 1);
 					String[] splitUpdateReq = updateUserReq.split("-");
@@ -215,7 +215,7 @@ public class UDPServer extends Thread {											//internal server class
 						if(registeredUsers.get(i).getName().equals(splitUpdateReq[1])) {
 							registeredUsers.get(i).setIp(splitUpdateReq[2]);
 							registeredUsers.get(i).setSocket(Integer.parseInt(splitUpdateReq[3]));
-							sendString("RQ#: " + splitUpdateReq[0] + ": "+"Update confirmed ", 0, dpReceive.getAddress(), dpReceive.getPort());
+							sendString("RQ#: " + splitUpdateReq[0] + ": "+"Update confirmed ", 4, dpReceive.getAddress(), dpReceive.getPort());
 							fm.updateUserList(registeredUsers); //update file
 							found = true;
 							
@@ -228,7 +228,7 @@ public class UDPServer extends Thread {											//internal server class
 						}
 					}
 					if (!found) {
-						sendString("RQ#: " + splitUpdateReq[0] + ": "+"The user does not exist ", 0, dpReceive.getAddress(), dpReceive.getPort());
+						sendString("RQ#: " + splitUpdateReq[0] + ": "+"The user does not exist ", 5, dpReceive.getAddress(), dpReceive.getPort());
 					}
 					break;
 
