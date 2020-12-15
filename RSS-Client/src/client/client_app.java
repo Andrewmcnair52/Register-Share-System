@@ -94,11 +94,12 @@ public class client_app {
 	        System.out.println("4\t Update subject of interest");
 	        System.out.println("5\t Publish on a subject of interest");
 	        System.out.println("6\t Stop the client app");
-	        System.out.println("7\t start socketListener the socket Listener");
+	        System.out.println("7\t initialize with server");
 	        System.out.println("8\t Print last 10 logs");
 	        System.out.println("9\t Print last 10 messages");
 	        System.out.print("> ");
 	        while (!in.hasNextInt()) in.next();
+	        System.out.print("\n");
 	        
 	        try {
 	        

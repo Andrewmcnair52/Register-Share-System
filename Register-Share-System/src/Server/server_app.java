@@ -82,6 +82,7 @@ public class server_app {
 				
 				System.out.print(out);
 				input = Integer.parseInt( cin.readLine() );
+				System.out.print("\n");
 				
 				switch(input) {
 				
